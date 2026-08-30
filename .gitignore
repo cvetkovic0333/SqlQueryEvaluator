@@ -1,0 +1,35 @@
+# ---- .NET ----
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userprefs
+project.lock.json
+artifacts/
+
+# ---- IDE ----
+.vs/
+.idea/
+# .vscode je namerno u repou (launch/tasks/extensions), ali ne i lokalna podesavanja:
+.vscode/*.local.json
+
+# ---- Tajne (NIKAD na GitHub) ----
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+*.env
+.env
+
+# ---- Rezultati benchmarka (generisu se) ----
+benchmark/results/*
+!benchmark/results/.gitkeep
+
+# ---- Prateca dokumentacija, ne ide u repo ----
+*.pdf
+
+# ---- OS ----
+Thumbs.db
+desktop.ini
+.DS_Store
