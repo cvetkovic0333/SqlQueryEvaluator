@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Text-to-SQL Evaluator</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">SQL</span>
+      <div>
+        <h1>Text-to-SQL Evaluator</h1>
+        <p class="brand-sub">Prevođenje govornog jezika u SQL uz evaluaciju modela</p>
+      </div>
+    </div>
+    <div class="model-pill" id="active-model">model: —</div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" data-tab="dashboard" role="tab">Rezultati modela</button>
+    <button class="tab" data-tab="database" role="tab">Baza</button>
+    <button class="tab" data-tab="query" role="tab">Upit</button>
+    <button class="tab" data-tab="history" role="tab">Istorija</button>
+  </nav>
+
+  <main>
+    <section class="panel is-active" id="tab-dashboard">
+      <p class="placeholder">Faza 7 — grafikoni poređenja modela (tačnost po težini, srpski vs engleski, latencija, slaganje sudije).</p>
+    </section>
+    <section class="panel" id="tab-database">
+      <p class="placeholder">Faza 7 — učitavanje šeme, izbor tabela i pregled podataka.</p>
+    </section>
+    <section class="panel" id="tab-query">
+      <p class="placeholder">Faza 7 — unos pitanja, generisani SQL, ocena sudije, izvršavanje.</p>
+    </section>
+    <section class="panel" id="tab-history">
+      <p class="placeholder">Faza 7 — istorija prethodnih upita.</p>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

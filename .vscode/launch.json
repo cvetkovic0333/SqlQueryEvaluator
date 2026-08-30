@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (web + frontend)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/SqlQueryEvaluator.Api/bin/Debug/net9.0/SqlQueryEvaluator.Api.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/SqlQueryEvaluator.Api",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\bNow listening on:\s+(https?://\S+)"
+      },
+      "env": { "ASPNETCORE_ENVIRONMENT": "Development" },
+      "sourceFileMap": { "/Views": "${workspaceFolder}/Views" }
+    },
+    {
+      "name": "Benchmark (--dry-run)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/SqlQueryEvaluator.Benchmark/bin/Debug/net9.0/SqlQueryEvaluator.Benchmark.dll",
+      "args": ["--dry-run"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false
+    }
+  ]
+}

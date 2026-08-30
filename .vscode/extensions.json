@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp",
+    "ckolkman.vscode-postgres",
+    "esbenp.prettier-vscode"
+  ]
+}
