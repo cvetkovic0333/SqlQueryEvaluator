@@ -1,21 +1,43 @@
-// Tanak omotac oko fetch-a ka /api/*. Faza 6/7.
+// Tanak omotač oko fetch-a ka /api/*. Sve greške se svode na Error sa
+// porukom koju server pošalje, da bi interfejs uvek imao šta da prikaže.
 
-async function request(path, options = {}) {
-  const res = await fetch(path, {
+async function zahtev(putanja, opcije = {}) {
+  const odgovor = await fetch(putanja, {
     headers: { "Content-Type": "application/json" },
-    ...options,
+    ...opcije,
   });
-  if (!res.ok) {
-    throw new Error(`${res.status} ${res.statusText}: ${await res.text()}`);
+
+  const tekst = await odgovor.text();
+  let telo = null;
+  try {
+    telo = tekst ? JSON.parse(tekst) : null;
+  } catch {
+    telo = { greska: tekst };
   }
-  return res.json();
+
+  if (!odgovor.ok) {
+    const poruka = telo?.greska || telo?.detail || telo?.title || `HTTP ${odgovor.status}`;
+    const g = new Error(poruka);
+    g.telo = telo;
+    g.status = odgovor.status;
+    throw g;
+  }
+
+  return telo;
 }
 
 export const api = {
-  schema: () => request("/api/schema"),
-  preview: (table, limit = 50) => request(`/api/schema/${encodeURIComponent(table)}/preview?limit=${limit}`),
-  translate: (body) => request("/api/translate", { method: "POST", body: JSON.stringify(body) }),
-  execute: (body) => request("/api/execute", { method: "POST", body: JSON.stringify(body) }),
-  history: (limit = 50) => request(`/api/history?limit=${limit}`),
-  benchmarkSummary: () => request("/api/benchmark/summary"),
+  modeli: () => zahtev("/api/modeli"),
+  baze: () => zahtev("/api/baze"),
+  sema: (baza) => zahtev(`/api/sema/${encodeURIComponent(baza)}`),
+  pregled: (baza, tabela, limit = 50) =>
+    zahtev(`/api/sema/${encodeURIComponent(baza)}/${encodeURIComponent(tabela)}/pregled?limit=${limit}`),
+
+  prevedi: (telo) => zahtev("/api/prevedi", { method: "POST", body: JSON.stringify(telo) }),
+  izvrsi: (telo) => zahtev("/api/izvrsi", { method: "POST", body: JSON.stringify(telo) }),
+
+  istorija: (limit = 50) => zahtev(`/api/istorija?limit=${limit}`),
+  obrisiIstoriju: () => zahtev("/api/istorija", { method: "DELETE" }),
+
+  benchmark: () => zahtev("/api/benchmark/pregled"),
 };
