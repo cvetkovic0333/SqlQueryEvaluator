@@ -7,8 +7,8 @@ i nad kojima filtrira podatke, plus radne tabele same aplikacije.
 
 | Šema | Domen | Tabela | Redova |
 |---|---|---|---|
-| `prodavnica` | Online prodavnica | 9 | 13 700 |
-| `fakultet` | Studenti, predmeti, ispiti | 8 | 11 720 |
+| `prodavnica` | Online prodavnica | 9 | 13 210 |
+| `fakultet` | Studenti, predmeti, ispiti | 8 | 11 730 |
 | `aplikacija` | Istorija upita i rezultati benchmarka | 3 | — |
 
 ### `prodavnica`

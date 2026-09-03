@@ -218,8 +218,15 @@ FROM generate_series(1, 2000) AS i;
 -- ----------------------------------------------- stavke_porudzbine (5000)
 -- Svaka porudžbina dobija 2-3 stavke. proizvod_id se računa tako da se
 -- unutar iste porudžbine nikada ne ponovi (poštuje UNIQUE ograničenje).
--- Svaka treća porudžbina bira iz "popularnih" prvih 200 proizvoda, da bi
--- rangiranje najprodavanijih proizvoda imalo smisla.
+-- Svaka treća porudžbina bira iz "popularnih" proizvoda, da bi rangiranje
+-- najprodavanijih imalo smisla.
+--
+-- Moduli su PROSTI brojevi (199 i 937), a ne okrugli. Sa modulom 1000
+-- kategorija proizvoda ((proizvod_id - 1) % 10) postaje prosta funkcija
+-- broja porudžbine, pa svaki kupac kupuje iz svega par kategorija i upiti
+-- tipa "kupci koji kupuju iz više kategorija" nemaju šta da vrate.
+-- Uz modul 937 proizvodi 938-1000 se nikada ne naruče, što je realno i
+-- daje smisla upitu "koji proizvodi nikada nisu naručeni".
 WITH generisano AS (
     SELECT
         i,
@@ -232,8 +239,8 @@ mapirano AS (
         g.i,
         g.porudzbina_id,
         CASE WHEN g.porudzbina_id % 3 = 0
-             THEN 1 + (((g.porudzbina_id * 7)  + (g.krug * 67))  % 200)
-             ELSE 1 + (((g.porudzbina_id * 17) + (g.krug * 331)) % 1000)
+             THEN 1 + (((g.porudzbina_id * 7)  + (g.krug * 67))  % 199)
+             ELSE 1 + (((g.porudzbina_id * 17) + (g.krug * 331)) % 937)
         END AS proizvod_id
     FROM generisano g
 )
@@ -270,11 +277,18 @@ FROM prodavnica.porudzbine p
 WHERE p.porudzbina_id <= 1500;
 
 -- ------------------------------------------------------- recenzije (2000)
+-- Recenzije nisu ravnomerne: 60% ide na sto najrecenziranijih proizvoda,
+-- ostatak se razliva, a deo proizvoda ostaje bez ijedne recenzije. Sa
+-- ravnomernom raspodelom svaki proizvod dobije tačno dve recenzije, pa
+-- upit "proizvodi sa najmanje tri recenzije" nema šta da vrati.
 INSERT INTO prodavnica.recenzije (recenzija_id, proizvod_id, kupac_id, ocena,
                                   komentar, datum)
 SELECT
     i,
-    1 + ((i * 13) % 1000),
+    CASE WHEN i % 5 < 3
+         THEN 1 + mod(i::bigint * 7919, 100)::int
+         ELSE 1 + mod(i::bigint * 7919, 797)::int
+    END,
     1 + ((i * 29) % 1500),
     CASE
         WHEN i % 10 < 5 THEN 5

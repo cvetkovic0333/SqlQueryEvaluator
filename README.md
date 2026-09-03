@@ -40,43 +40,133 @@ Identifikatori su na srpskom, bez dijakritika.
 
 | Šema | Domen | Tabela | Redova |
 |---|---|---|---|
-| `prodavnica` | kategorije, dobavljači, zaposleni, proizvodi, kupci, porudžbine, stavke, isporuke, recenzije | 9 | 13 700 |
-| `fakultet` | katedre, smerovi, profesori, predmeti, studenti, upisi, rokovi, prijave ispita | 8 | 11 720 |
+| `prodavnica` | kategorije, dobavljači, zaposleni, proizvodi, kupci, porudžbine, stavke, isporuke, recenzije | 9 | 13 210 |
+| `fakultet` | katedre, smerovi, profesori, predmeti, studenti, upisi, rokovi, prijave ispita | 8 | 11 730 |
 
 Detalji i redosled pokretanja skripti: [Baza/README.md](Baza/README.md).
 
 ## Testirani modeli
 
-Besplatni API tierovi: **Groq**, **Google Gemini**, **OpenRouter (`:free`)**, **Mistral**.
-Novi model se dodaje jednim unosom u `Models` nizu u `appsettings.json` — bez pisanja koda.
+Besplatni API tierovi: **Groq**, **Google Gemini**, **OpenRouter (`:free`)**, **Mistral** —
+devet modela u registru. Tri od četiri provajdera izlažu isti OpenAI-kompatibilan
+oblik, pa ih pokriva jedna klasa; Gemini ima svoju. Novi model se dodaje **jednim
+unosom u `Models` nizu** u `appsettings.json`, bez pisanja koda:
+
+```json
+{ "Id": "groq:llama-3.3-70b", "Kind": "openai",
+  "BaseUrl": "https://api.groq.com/openai/v1",
+  "Model": "llama-3.3-70b-versatile", "ApiKeyRef": "Groq" }
+```
+
+> Ponuda besplatnih modela se menja. Ako neki naziv prestane da radi,
+> `--dry-run` to odmah pokaže, a ispravka je izmena jednog JSON polja.
+
+## Test set
+
+`benchmark/testset.json` — **45 zadataka**, po 15 na svakom nivou težine, svaki
+na srpskom i engleskom, nad obe šeme:
+
+| Težina | Šta pokriva |
+|---|---|
+| lak (15) | jedna tabela: `WHERE`, `ORDER BY`, `LIMIT`, `COUNT`, `ILIKE`, `BETWEEN`, `IS NULL` |
+| srednji (15) | 2–3 `JOIN`, `GROUP BY` + `HAVING`, datumske funkcije, `DISTINCT`, self-join |
+| težak (15) | CTE, window funkcije, `RANK`, `LAG`, running total, `NOT EXISTS`, `EXCEPT`, agregacija nad agregacijom |
+
+Svaki gold SQL je izvršen nad bazom i vraća neprazan rezultat — prazan rezultat
+je loš test, jer i pogrešan upit koji ne vrati ništa „pogodi".
 
 ## Metrike
 
-- **Execution accuracy (EX)** — izvrši se i generisani i tačan (gold) SQL, pa se porede rezultati
-- **Ocena sudije (1–5)** — LLM-as-a-Judge, uz obrazloženje
-- **Slaganje sudije sa EX** (+ Cohen's kappa) — koliko je sam sudija pouzdan
+- **Execution accuracy (EX)** — izvrši se i generisani i gold SQL, pa se porede
+  *rezultati*, ne tekst upita. Redovi se porede kao multiskup osim kada gold ima
+  `ORDER BY`; imena kolona se ignorišu, brojevi se zaokružuju na 4 decimale.
+- **Ocena sudije (1–5)** — LLM-as-a-Judge, uz obrazloženje na srpskom
+- **Slaganje sudije sa EX** + **Cohen's kappa** — koliko je sam sudija pouzdan
 - **Valid SQL rate**, prosečna latencija, potrošnja tokena
 - Sve razloženo **po težini zadatka** i **po jeziku pitanja**
 
 ## Pokretanje
 
+**1. Baza** — kreira `sqleval`, obe demo šeme sa podacima, radne tabele i read-only rolu:
+
 ```bash
 powershell -File Baza/pokreni_sve.ps1
 ```
 
+**2. Lozinke i API ključevi** — u `user-secrets`, nikada u `appsettings.json` (repo je javan):
+
 ```bash
-dotnet user-secrets set "ApiKeys:Groq" "..." --project src/SqlQueryEvaluator.Api
+dotnet user-secrets set "ApiKeys:Groq" "gsk_..." --project src/SqlQueryEvaluator.Api
 ```
+
+Isto za `ApiKeys:Gemini`, `ApiKeys:OpenRouter`, `ApiKeys:Mistral`, kao i za
+`ConnectionStrings:AplikacijaDb` i `ConnectionStrings:UpitDb`.
+Alternativa su promenljive okruženja: `GROQ_API_KEY`, `GEMINI_API_KEY`, …
+
+**3. Provera da ključevi rade** — pre nego što se potroši kvota na pun test:
+
+```bash
+dotnet run --project src/SqlQueryEvaluator.Benchmark -- --dry-run
+```
+
+**4. Test modela** — probno na 5 zadataka, pa pun run:
+
+```bash
+dotnet run --project src/SqlQueryEvaluator.Benchmark -- --limit 5
+```
+
+Pun test je 45 zadataka × 2 jezika × broj modela. Prekinut test se nastavlja sa
+`--resume <id>` — već urađeni parovi se preskaču i kvota se ne troši dvaput.
+
+**5. Aplikacija:**
 
 ```bash
 dotnet run --project src/SqlQueryEvaluator.Api
 ```
 
-Prva komanda kreira bazu `sqleval`, obe demo šeme sa podacima, radne tabele
-aplikacije i read-only rolu. Druga upisuje API ključ (nikada u `appsettings.json` —
-repo je javan). Treća diže i API i frontend na istom portu.
+U VS Code-u: **F5** → „API (web + frontend)". Jedan proces diže i API i frontend.
 
-U VS Code-u: **F5** → „API (web + frontend)".
+## Aplikacija
+
+Četiri sekcije:
+
+1. **Rezultati modela** — grafikoni iz stvarnih rezultata testa: tačnost po modelu,
+   po težini zadatka, srpski naspram engleskog, brzina naspram tačnosti, i poređenje
+   ocene sudije sa objektivnom tačnošću. Pobednik testa je istaknut — to je
+   obrazloženje zašto je izabran baš taj model. Dok test nije pokrenut, prikazuje se
+   uputstvo, a ne izmišljeni brojevi.
+2. **Baza** — učitavanje šeme, lista tabela sa brojem redova, tipovi kolona,
+   primarni i strani ključevi, pregled sadržaja. Čekiranjem tabela bira se kontekst
+   koji ide modelu.
+3. **Upit** — pitanje na srpskom ili engleskom → generisani SQL → ocena sudije sa
+   obrazloženjem → izvršavanje. Upit ocenjen sa 4 ili 5 ide odmah; ispod toga
+   aplikacija traži izričitu potvrdu.
+4. **Istorija** — prethodni upiti sa ocenom i statusom; klik vraća upit u editor.
+
+## Bezbednost izvršavanja
+
+SQL koji je generisao model izvršava se u dva sloja zaštite:
+
+1. **baza** — rola `sqleval_citanje` sme samo `SELECT` nad demo šemama, radne
+   podatke aplikacije uopšte ne vidi, a upit joj se prekida posle 5 sekundi
+2. **aplikacija** — sanitizer: samo jedan `SELECT`/`WITH` statement, blacklist
+   ključnih reči, read-only transakcija koja se uvek završava `ROLLBACK`-om
+
+Sanitizer maskira string literale pre provere ključnih reči, pa legitiman upit
+`WHERE status = 'otkazana'` prolazi, a `DROP` sakriven iza komentara ne prolazi.
+
+Provereno na živoj bazi — `DELETE`, `DROP TABLE`, `pg_sleep`, pristup šemi
+`aplikacija` i sistemskim katalozima odbijaju se, i to na oba nivoa.
+
+## Testovi
+
+```bash
+dotnet test
+```
+
+60 testova: sanitizer (uključujući pokušaje zaobilaženja), poređenje rezultata,
+Cohen's kappa, parsiranje odgovora sudije, širenje konteksta preko stranih ključeva
+i ispravnost samog test seta.
 
 ## Bezbednost izvršavanja
 

@@ -4,42 +4,250 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Text-to-SQL Evaluator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-mark">SQL</span>
-      <div>
-        <h1>Text-to-SQL Evaluator</h1>
-        <p class="brand-sub">Prevođenje govornog jezika u SQL uz evaluaciju modela</p>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <ellipse cx="12" cy="5.5" rx="7.5" ry="3"/>
+        <path d="M4.5 5.5v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/>
+        <path d="M4.5 11.5v6c0 1.66 3.36 3 7.5 3s7.5-1.34 7.5-3v-6"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Text-to-SQL Evaluator</h1>
+      <p class="brand-sub">Prevođenje govornog jezika u SQL uz evaluaciju modela</p>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="pill" id="pill-model" title="Model koji generiše SQL">
+      <span class="pill-label">model</span>
+      <span class="pill-value" id="pill-model-value">—</span>
+    </div>
+    <div class="pill" id="pill-sudija" title="Model u ulozi sudije">
+      <span class="pill-label">sudija</span>
+      <span class="pill-value" id="pill-sudija-value">—</span>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button class="tab is-active" data-tab="rezultati" role="tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    Rezultati modela
+  </button>
+  <button class="tab" data-tab="baza" role="tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+    Baza
+  </button>
+  <button class="tab" data-tab="upit" role="tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Upit
+  </button>
+  <button class="tab" data-tab="istorija" role="tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    Istorija
+  </button>
+</nav>
+
+<main>
+
+  <!-- ================= REZULTATI MODELA ================= -->
+  <section class="panel is-active" id="tab-rezultati">
+    <div id="rezultati-prazno" class="prazno hidden">
+      <div class="prazno-ikona">
+        <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      </div>
+      <h2>Test modela još nije pokrenut</h2>
+      <p>Grafikoni se crtaju iz stvarnih rezultata testiranja. Pokreni benchmark pa se vrati ovde.</p>
+      <pre class="kod-blok">dotnet run --project src/SqlQueryEvaluator.Benchmark</pre>
+    </div>
+
+    <div id="rezultati-sadrzaj" class="hidden">
+      <div class="pobednik" id="pobednik-kartica">
+        <div class="pobednik-oznaka">Najbolji model</div>
+        <div class="pobednik-ime" id="pobednik-ime">—</div>
+        <div class="pobednik-metrike" id="pobednik-metrike"></div>
+      </div>
+
+      <div class="kpi-red" id="kpi-red"></div>
+
+      <div class="grid-grafikoni">
+        <div class="kartica">
+          <div class="kartica-zaglavlje">
+            <h3>Tačnost po modelu</h3>
+            <span class="kartica-opis">Execution accuracy — udeo upita čiji se rezultat poklopio sa tačnim</span>
+          </div>
+          <div class="grafikon-okvir"><canvas id="graf-modeli"></canvas></div>
+        </div>
+
+        <div class="kartica">
+          <div class="kartica-zaglavlje">
+            <h3>Tačnost po težini zadatka</h3>
+            <span class="kartica-opis">Koliko model pada kada zadatak postane složeniji</span>
+          </div>
+          <div class="grafikon-okvir"><canvas id="graf-tezina"></canvas></div>
+        </div>
+
+        <div class="kartica">
+          <div class="kartica-zaglavlje">
+            <h3>Srpski naspram engleskog</h3>
+            <span class="kartica-opis">Isto pitanje na dva jezika — koliko se gubi na srpskom</span>
+          </div>
+          <div class="grafikon-okvir"><canvas id="graf-jezik"></canvas></div>
+        </div>
+
+        <div class="kartica">
+          <div class="kartica-zaglavlje">
+            <h3>Brzina naspram tačnosti</h3>
+            <span class="kartica-opis">Gore levo je najbolje: tačan i brz</span>
+          </div>
+          <div class="grafikon-okvir"><canvas id="graf-brzina"></canvas></div>
+        </div>
+
+        <div class="kartica kartica-siroka">
+          <div class="kartica-zaglavlje">
+            <h3>Da li je sudija pouzdan?</h3>
+            <span class="kartica-opis">
+              Prosečna ocena sudije (1–5, skalirana na 100) uporedo sa objektivnom tačnošću.
+              Veliki razmak znači da sudija precenjuje ili potcenjuje modele.
+            </span>
+          </div>
+          <div class="grafikon-okvir"><canvas id="graf-sudija"></canvas></div>
+          <div class="slaganje-kutija" id="slaganje-kutija"></div>
+        </div>
+      </div>
+
+      <div class="kartica">
+        <div class="kartica-zaglavlje sa-akcijom">
+          <div>
+            <h3>Sve metrike</h3>
+            <span class="kartica-opis">Tabela iz koje se preuzimaju brojevi za pisani deo rada</span>
+          </div>
+          <a class="dugme dugme-tiho" id="dugme-csv" href="/api/benchmark/izvoz.csv" download>
+            Preuzmi CSV
+          </a>
+        </div>
+        <div class="tabela-okvir">
+          <table class="tabela" id="tabela-metrike"></table>
+        </div>
       </div>
     </div>
-    <div class="model-pill" id="active-model">model: —</div>
-  </header>
+  </section>
 
-  <nav class="tabs" role="tablist">
-    <button class="tab is-active" data-tab="dashboard" role="tab">Rezultati modela</button>
-    <button class="tab" data-tab="database" role="tab">Baza</button>
-    <button class="tab" data-tab="query" role="tab">Upit</button>
-    <button class="tab" data-tab="history" role="tab">Istorija</button>
-  </nav>
+  <!-- ================= BAZA ================= -->
+  <section class="panel" id="tab-baza">
+    <div class="alatna-traka">
+      <div class="polje">
+        <label for="izbor-baze">Baza</label>
+        <select id="izbor-baze"></select>
+      </div>
+      <button class="dugme dugme-glavno" id="dugme-ucitaj-bazu">Učitaj bazu</button>
+      <div class="alatna-info" id="baza-info"></div>
+    </div>
 
-  <main>
-    <section class="panel is-active" id="tab-dashboard">
-      <p class="placeholder">Faza 7 — grafikoni poređenja modela (tačnost po težini, srpski vs engleski, latencija, slaganje sudije).</p>
-    </section>
-    <section class="panel" id="tab-database">
-      <p class="placeholder">Faza 7 — učitavanje šeme, izbor tabela i pregled podataka.</p>
-    </section>
-    <section class="panel" id="tab-query">
-      <p class="placeholder">Faza 7 — unos pitanja, generisani SQL, ocena sudije, izvršavanje.</p>
-    </section>
-    <section class="panel" id="tab-history">
-      <p class="placeholder">Faza 7 — istorija prethodnih upita.</p>
-    </section>
-  </main>
+    <div class="baza-raspored">
+      <aside class="tabele-lista" id="tabele-lista">
+        <div class="prazno-malo">Klikni „Učitaj bazu" da vidiš tabele.</div>
+      </aside>
+      <div class="tabela-detalj" id="tabela-detalj">
+        <div class="prazno-malo">Izaberi tabelu sa leve strane da vidiš njen sadržaj.</div>
+      </div>
+    </div>
+  </section>
 
-  <script type="module" src="js/app.js"></script>
+  <!-- ================= UPIT ================= -->
+  <section class="panel" id="tab-upit">
+    <div class="upit-raspored">
+      <div class="kartica">
+        <div class="kartica-zaglavlje">
+          <h3>Pitanje govornim jezikom</h3>
+          <span class="kartica-opis">Napiši šta te zanima — SQL ne treba da znaš</span>
+        </div>
+
+        <div class="upit-kontrole">
+          <div class="polje">
+            <label for="upit-baza">Baza</label>
+            <select id="upit-baza"></select>
+          </div>
+          <div class="polje">
+            <label for="upit-model">Model</label>
+            <select id="upit-model"></select>
+          </div>
+          <div class="polje">
+            <label>Jezik pitanja</label>
+            <div class="prekidac" id="prekidac-jezik">
+              <button class="prekidac-opcija is-active" data-jezik="sr">Srpski</button>
+              <button class="prekidac-opcija" data-jezik="en">English</button>
+            </div>
+          </div>
+        </div>
+
+        <textarea id="upit-tekst" rows="3"
+                  placeholder="Na primer: Prikaži 10 kupaca sa najvećom potrošnjom u 2024. godini"></textarea>
+
+        <div class="predlozi" id="predlozi"></div>
+
+        <div class="izabrane-tabele" id="izabrane-tabele-info"></div>
+
+        <div class="upit-akcije">
+          <button class="dugme dugme-glavno" id="dugme-prevedi">
+            <span class="dugme-tekst">Prevedi u SQL</span>
+          </button>
+          <span class="upit-status" id="upit-status"></span>
+        </div>
+      </div>
+
+      <div class="kartica hidden" id="kartica-sql">
+        <div class="kartica-zaglavlje sa-akcijom">
+          <div>
+            <h3>Generisani SQL</h3>
+            <span class="kartica-opis" id="sql-meta"></span>
+          </div>
+          <div class="ocena-znacka" id="ocena-znacka"></div>
+        </div>
+
+        <pre class="sql-prikaz" id="sql-prikaz"></pre>
+        <div class="obrazlozenje" id="obrazlozenje"></div>
+
+        <div class="upit-akcije">
+          <button class="dugme dugme-glavno" id="dugme-izvrsi">Izvrši upit</button>
+          <button class="dugme dugme-tiho" id="dugme-kopiraj">Kopiraj SQL</button>
+          <span class="upit-status" id="izvrsi-status"></span>
+        </div>
+      </div>
+
+      <div class="kartica hidden" id="kartica-rezultat">
+        <div class="kartica-zaglavlje">
+          <h3>Rezultat</h3>
+          <span class="kartica-opis" id="rezultat-meta"></span>
+        </div>
+        <div class="tabela-okvir">
+          <table class="tabela" id="tabela-rezultat"></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ISTORIJA ================= -->
+  <section class="panel" id="tab-istorija">
+    <div class="alatna-traka">
+      <button class="dugme dugme-tiho" id="dugme-osvezi-istoriju">Osveži</button>
+      <button class="dugme dugme-tiho dugme-opasno" id="dugme-obrisi-istoriju">Obriši istoriju</button>
+    </div>
+    <div id="istorija-lista"></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>

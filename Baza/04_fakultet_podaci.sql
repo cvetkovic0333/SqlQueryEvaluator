@@ -100,7 +100,10 @@ SELECT
     (ARRAY[6, 5, 6, 7, 8, 6, 5, 7, 6, 4])[o.redni_broj],
     1 + ((o.i * 3) % 8),
     o.smer_id,
-    1 + ((o.i * 7) % 100),
+    -- Modul 80, a ne 100: profesori 81-100 ne predaju nijedan predmet.
+    -- To je realno (novoizabrani, na bolovanju) i daje smisla upitu
+    -- "koji profesori ne predaju nijedan predmet".
+    1 + ((o.i * 7) % 80),
     (o.redni_broj <= 7)
 FROM osnova o
 JOIN fakultet.smerovi s ON s.smer_id = o.smer_id

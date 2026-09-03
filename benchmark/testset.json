@@ -1,6 +1,559 @@
 {
-  "version": 1,
-  "schema": "shop",
-  "description": "45 zadataka (15 easy / 15 medium / 15 hard), svaki na srpskom i engleskom.",
-  "tasks": []
+  "verzija": 1,
+  "opis": "45 zadataka (15 lakih, 15 srednjih, 15 teških) nad šemama prodavnica i fakultet, svaki na srpskom i engleskom jeziku.",
+  "zadaci": [
+    {
+      "id": "P-L01",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži ime i prezime svih kupaca iz Beograda.",
+      "pitanjeEn": "Show the first and last name of all customers from Beograd.",
+      "goldSql": "SELECT ime, prezime FROM prodavnica.kupci WHERE grad = 'Beograd'",
+      "oznake": [
+        "where"
+      ]
+    },
+    {
+      "id": "P-L02",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koliko proizvoda ima manje od 10 komada na stanju?",
+      "pitanjeEn": "How many products have fewer than 10 units in stock?",
+      "goldSql": "SELECT count(*) FROM prodavnica.proizvodi WHERE kolicina_na_stanju < 10",
+      "oznake": [
+        "count",
+        "where"
+      ]
+    },
+    {
+      "id": "P-L03",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži 5 najskupljih proizvoda sa njihovom cenom.",
+      "pitanjeEn": "Show the 5 most expensive products with their price.",
+      "goldSql": "SELECT naziv, cena FROM prodavnica.proizvodi ORDER BY cena DESC LIMIT 5",
+      "oznake": [
+        "order-by",
+        "limit"
+      ]
+    },
+    {
+      "id": "P-L04",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koji zaposleni nemaju nadređenog?",
+      "pitanjeEn": "Which employees have no manager?",
+      "goldSql": "SELECT ime, prezime FROM prodavnica.zaposleni WHERE menadzer_id IS NULL",
+      "oznake": [
+        "is-null"
+      ]
+    },
+    {
+      "id": "P-L05",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži nazive kategorija koje u imenu sadrže reč oprema.",
+      "pitanjeEn": "Show the names of categories whose name contains the word oprema.",
+      "goldSql": "SELECT naziv FROM prodavnica.kategorije WHERE naziv ILIKE '%oprema%'",
+      "oznake": [
+        "ilike"
+      ]
+    },
+    {
+      "id": "P-L06",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koliko porudžbina je otkazano?",
+      "pitanjeEn": "How many orders were cancelled?",
+      "goldSql": "SELECT count(*) FROM prodavnica.porudzbine WHERE status = 'otkazana'",
+      "oznake": [
+        "count",
+        "where"
+      ]
+    },
+    {
+      "id": "P-L07",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži kupce koji su se registrovali tokom 2021. godine.",
+      "pitanjeEn": "Show the customers who registered during 2021.",
+      "goldSql": "SELECT ime, prezime, datum_registracije FROM prodavnica.kupci WHERE datum_registracije BETWEEN DATE '2021-01-01' AND DATE '2021-12-31'",
+      "oznake": [
+        "between",
+        "date"
+      ]
+    },
+    {
+      "id": "P-L08",
+      "tezina": "lak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Kolika je prosečna plata zaposlenih u sektoru IT?",
+      "pitanjeEn": "What is the average salary of employees in the IT department?",
+      "goldSql": "SELECT avg(plata) FROM prodavnica.zaposleni WHERE sektor = 'IT'",
+      "oznake": [
+        "avg",
+        "where"
+      ]
+    },
+    {
+      "id": "F-L01",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži broj indeksa, ime i prezime studenata koji su ispisani.",
+      "pitanjeEn": "Show the index number, first and last name of students who withdrew.",
+      "goldSql": "SELECT broj_indeksa, ime, prezime FROM fakultet.studenti WHERE status = 'ispisan'",
+      "oznake": [
+        "where"
+      ]
+    },
+    {
+      "id": "F-L02",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koliko ima profesora u zvanju redovni profesor?",
+      "pitanjeEn": "How many professors hold the title redovni profesor?",
+      "goldSql": "SELECT count(*) FROM fakultet.profesori WHERE zvanje = 'redovni profesor'",
+      "oznake": [
+        "count",
+        "where"
+      ]
+    },
+    {
+      "id": "F-L03",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži šifru, naziv i broj bodova predmeta koji nose više od 6 ESPB.",
+      "pitanjeEn": "Show the code, name and credits of courses worth more than 6 ECTS.",
+      "goldSql": "SELECT sifra, naziv, espb FROM fakultet.predmeti WHERE espb > 6",
+      "oznake": [
+        "where"
+      ]
+    },
+    {
+      "id": "F-L04",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koji smerovi traju 4 godine?",
+      "pitanjeEn": "Which study programs last 4 years?",
+      "goldSql": "SELECT naziv FROM fakultet.smerovi WHERE trajanje_godina = 4",
+      "oznake": [
+        "where"
+      ]
+    },
+    {
+      "id": "F-L05",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži 5 najstarijih katedri po godini osnivanja.",
+      "pitanjeEn": "Show the 5 oldest departments by year of founding.",
+      "goldSql": "SELECT naziv, godina_osnivanja FROM fakultet.katedre ORDER BY godina_osnivanja LIMIT 5",
+      "oznake": [
+        "order-by",
+        "limit"
+      ]
+    },
+    {
+      "id": "F-L06",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koliko studenata je upisano 2022. godine?",
+      "pitanjeEn": "How many students enrolled in 2022?",
+      "goldSql": "SELECT count(*) FROM fakultet.studenti WHERE godina_upisa = 2022",
+      "oznake": [
+        "count",
+        "where"
+      ]
+    },
+    {
+      "id": "F-L07",
+      "tezina": "lak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koliko prijava ispita nema upisanu ocenu?",
+      "pitanjeEn": "How many exam registrations have no grade recorded?",
+      "goldSql": "SELECT count(*) FROM fakultet.prijave_ispita WHERE ocena IS NULL",
+      "oznake": [
+        "count",
+        "is-null"
+      ]
+    },
+    {
+      "id": "P-S01",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži ukupnu zaradu po kategoriji proizvoda, od najveće ka najmanjoj.",
+      "pitanjeEn": "Show total revenue per product category, from highest to lowest.",
+      "goldSql": "SELECT k.naziv, SUM(s.kolicina * s.cena) AS zarada FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id GROUP BY k.naziv ORDER BY zarada DESC",
+      "oznake": [
+        "join",
+        "group-by",
+        "order-by"
+      ]
+    },
+    {
+      "id": "P-S02",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koliko porudžbina ima svaki kupac iz Novog Sada?",
+      "pitanjeEn": "How many orders does each customer from Novi Sad have?",
+      "goldSql": "SELECT k.ime, k.prezime, count(*) AS broj FROM prodavnica.kupci k JOIN prodavnica.porudzbine p ON p.kupac_id = k.kupac_id WHERE k.grad = 'Novi Sad' GROUP BY k.kupac_id, k.ime, k.prezime",
+      "oznake": [
+        "join",
+        "group-by",
+        "where"
+      ]
+    },
+    {
+      "id": "P-S03",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži prosečnu ocenu po proizvodu, ali samo za proizvode sa najmanje 3 recenzije.",
+      "pitanjeEn": "Show the average rating per product, but only for products with at least 3 reviews.",
+      "goldSql": "SELECT p.naziv, round(avg(r.ocena), 2) AS prosek, count(*) AS broj_recenzija FROM prodavnica.recenzije r JOIN prodavnica.proizvodi p ON p.proizvod_id = r.proizvod_id GROUP BY p.proizvod_id, p.naziv HAVING count(*) >= 3",
+      "oznake": [
+        "join",
+        "group-by",
+        "having"
+      ]
+    },
+    {
+      "id": "P-S04",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži broj porudžbina po mesecu u 2024. godini, gde je mesec broj od 1 do 12.",
+      "pitanjeEn": "Show the number of orders per month in 2024, where the month is a number from 1 to 12.",
+      "goldSql": "SELECT EXTRACT(MONTH FROM datum_porudzbine) AS mesec, count(*) AS broj FROM prodavnica.porudzbine WHERE EXTRACT(YEAR FROM datum_porudzbine) = 2024 GROUP BY 1",
+      "oznake": [
+        "date",
+        "group-by"
+      ]
+    },
+    {
+      "id": "P-S05",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koje kurirske službe su isporučile najviše pošiljki? Broji samo isporučene.",
+      "pitanjeEn": "Which couriers delivered the most shipments? Count only delivered ones.",
+      "goldSql": "SELECT kurirska_sluzba, count(*) AS broj FROM prodavnica.isporuke WHERE datum_isporuke IS NOT NULL GROUP BY kurirska_sluzba ORDER BY broj DESC",
+      "oznake": [
+        "group-by",
+        "is-null",
+        "order-by"
+      ]
+    },
+    {
+      "id": "P-S06",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži ime i prezime svakog zaposlenog zajedno sa imenom i prezimenom njegovog menadžera.",
+      "pitanjeEn": "Show each employee's first and last name together with their manager's first and last name.",
+      "goldSql": "SELECT z.ime, z.prezime, m.ime AS ime_menadzera, m.prezime AS prezime_menadzera FROM prodavnica.zaposleni z JOIN prodavnica.zaposleni m ON m.zaposleni_id = z.menadzer_id",
+      "oznake": [
+        "self-join"
+      ]
+    },
+    {
+      "id": "P-S07",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koliko različitih proizvoda je naručeno iz svake kategorije?",
+      "pitanjeEn": "How many distinct products were ordered from each category?",
+      "goldSql": "SELECT k.naziv, count(DISTINCT s.proizvod_id) AS broj FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id GROUP BY k.naziv",
+      "oznake": [
+        "join",
+        "distinct",
+        "group-by"
+      ]
+    },
+    {
+      "id": "P-S08",
+      "tezina": "srednji",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži 10 kupaca sa najvećom ukupnom potrošnjom.",
+      "pitanjeEn": "Show the 10 customers with the highest total spending.",
+      "goldSql": "SELECT k.ime, k.prezime, SUM(s.kolicina * s.cena) AS potrosnja FROM prodavnica.kupci k JOIN prodavnica.porudzbine p ON p.kupac_id = k.kupac_id JOIN prodavnica.stavke_porudzbine s ON s.porudzbina_id = p.porudzbina_id GROUP BY k.kupac_id, k.ime, k.prezime ORDER BY potrosnja DESC LIMIT 10",
+      "oznake": [
+        "join",
+        "group-by",
+        "order-by",
+        "limit"
+      ]
+    },
+    {
+      "id": "F-S01",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži prosečnu ocenu po smeru.",
+      "pitanjeEn": "Show the average grade per study program.",
+      "goldSql": "SELECT sm.naziv, round(avg(pi.ocena), 2) AS prosek FROM fakultet.studenti st JOIN fakultet.smerovi sm ON sm.smer_id = st.smer_id JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE pi.ocena IS NOT NULL GROUP BY sm.naziv",
+      "oznake": [
+        "join",
+        "group-by",
+        "avg"
+      ]
+    },
+    {
+      "id": "F-S02",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Koliko studenata ima svaki smer?",
+      "pitanjeEn": "How many students does each study program have?",
+      "goldSql": "SELECT sm.naziv, count(*) AS broj FROM fakultet.studenti st JOIN fakultet.smerovi sm ON sm.smer_id = st.smer_id GROUP BY sm.naziv",
+      "oznake": [
+        "join",
+        "group-by"
+      ]
+    },
+    {
+      "id": "F-S03",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži predmete čija je prolaznost ispod 50 procenata.",
+      "pitanjeEn": "Show the courses whose pass rate is below 50 percent.",
+      "goldSql": "SELECT p.naziv, round(100.0 * count(*) FILTER (WHERE pi.polozen) / count(*), 1) AS prolaznost FROM fakultet.predmeti p JOIN fakultet.upisi_predmeta u ON u.predmet_id = p.predmet_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id GROUP BY p.predmet_id, p.naziv HAVING 100.0 * count(*) FILTER (WHERE pi.polozen) / count(*) < 50",
+      "oznake": [
+        "join",
+        "group-by",
+        "having"
+      ]
+    },
+    {
+      "id": "F-S04",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Koliko predmeta predaje svaki profesor?",
+      "pitanjeEn": "How many courses does each professor teach?",
+      "goldSql": "SELECT pr.ime, pr.prezime, count(*) AS broj FROM fakultet.profesori pr JOIN fakultet.predmeti p ON p.profesor_id = pr.profesor_id GROUP BY pr.profesor_id, pr.ime, pr.prezime",
+      "oznake": [
+        "join",
+        "group-by"
+      ]
+    },
+    {
+      "id": "F-S05",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži broj prijava po ispitnom roku.",
+      "pitanjeEn": "Show the number of exam registrations per exam period.",
+      "goldSql": "SELECT r.naziv, r.skolska_godina, count(*) AS broj FROM fakultet.ispitni_rokovi r JOIN fakultet.prijave_ispita pi ON pi.rok_id = r.rok_id GROUP BY r.rok_id, r.naziv, r.skolska_godina",
+      "oznake": [
+        "join",
+        "group-by"
+      ]
+    },
+    {
+      "id": "F-S06",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži studente čiji je prosek ocena veći od 8.",
+      "pitanjeEn": "Show the students whose average grade is higher than 8.",
+      "goldSql": "SELECT st.ime, st.prezime, round(avg(pi.ocena), 2) AS prosek FROM fakultet.studenti st JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE pi.ocena IS NOT NULL GROUP BY st.student_id, st.ime, st.prezime HAVING avg(pi.ocena) > 8",
+      "oznake": [
+        "join",
+        "group-by",
+        "having"
+      ]
+    },
+    {
+      "id": "F-S07",
+      "tezina": "srednji",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži svaku katedru i broj smerova koji joj pripadaju.",
+      "pitanjeEn": "Show each department and the number of study programs belonging to it.",
+      "goldSql": "SELECT k.naziv, count(s.smer_id) AS broj_smerova FROM fakultet.katedre k LEFT JOIN fakultet.smerovi s ON s.katedra_id = k.katedra_id GROUP BY k.naziv",
+      "oznake": [
+        "left-join",
+        "group-by"
+      ]
+    },
+    {
+      "id": "P-T01",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Za svaku kategoriju prikaži njen najskuplji proizvod.",
+      "pitanjeEn": "For each category show its most expensive product.",
+      "goldSql": "WITH rang AS ( SELECT p.naziv, p.cena, k.naziv AS kategorija, ROW_NUMBER() OVER (PARTITION BY p.kategorija_id ORDER BY p.cena DESC, p.proizvod_id) AS r FROM prodavnica.proizvodi p JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id) SELECT kategorija, naziv, cena FROM rang WHERE r = 1",
+      "oznake": [
+        "cte",
+        "window",
+        "join"
+      ]
+    },
+    {
+      "id": "P-T02",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koji proizvodi nikada nisu naručeni?",
+      "pitanjeEn": "Which products have never been ordered?",
+      "goldSql": "SELECT p.naziv FROM prodavnica.proizvodi p WHERE NOT EXISTS (SELECT 1 FROM prodavnica.stavke_porudzbine s WHERE s.proizvod_id = p.proizvod_id)",
+      "oznake": [
+        "not-exists",
+        "subquery"
+      ]
+    },
+    {
+      "id": "P-T03",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži zaradu po mesecima u 2024. godini i kumulativnu zaradu od početka godine.",
+      "pitanjeEn": "Show revenue per month in 2024 together with the running total from the start of the year.",
+      "goldSql": "WITH m AS ( SELECT date_trunc('month', p.datum_porudzbine) AS mesec, SUM(s.kolicina * s.cena) AS zarada FROM prodavnica.porudzbine p JOIN prodavnica.stavke_porudzbine s ON s.porudzbina_id = p.porudzbina_id WHERE p.datum_porudzbine >= DATE '2024-01-01' AND p.datum_porudzbine < DATE '2025-01-01' GROUP BY 1) SELECT mesec, zarada, SUM(zarada) OVER (ORDER BY mesec) AS kumulativno FROM m ORDER BY mesec",
+      "oznake": [
+        "cte",
+        "window",
+        "running-total"
+      ]
+    },
+    {
+      "id": "P-T04",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koji kupci su naručivali proizvode iz više od 5 različitih kategorija?",
+      "pitanjeEn": "Which customers ordered products from more than 5 different categories?",
+      "goldSql": "SELECT k.ime, k.prezime, count(DISTINCT p.kategorija_id) AS broj_kategorija FROM prodavnica.kupci k JOIN prodavnica.porudzbine o ON o.kupac_id = k.kupac_id JOIN prodavnica.stavke_porudzbine s ON s.porudzbina_id = o.porudzbina_id JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id GROUP BY k.kupac_id, k.ime, k.prezime HAVING count(DISTINCT p.kategorija_id) > 5",
+      "oznake": [
+        "join",
+        "distinct",
+        "having"
+      ]
+    },
+    {
+      "id": "P-T05",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Za svakog zaposlenog prikaži broj obrađenih porudžbina i odstupanje od proseka svih zaposlenih.",
+      "pitanjeEn": "For each employee show the number of processed orders and the deviation from the average across all employees.",
+      "goldSql": "WITH po_zaposlenom AS ( SELECT z.zaposleni_id, z.ime, z.prezime, count(p.porudzbina_id) AS broj FROM prodavnica.zaposleni z LEFT JOIN prodavnica.porudzbine p ON p.zaposleni_id = z.zaposleni_id GROUP BY z.zaposleni_id, z.ime, z.prezime) SELECT ime, prezime, broj, round(broj - avg(broj) OVER (), 2) AS odstupanje FROM po_zaposlenom",
+      "oznake": [
+        "cte",
+        "window",
+        "left-join"
+      ]
+    },
+    {
+      "id": "P-T06",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koje kategorije imaju prosečnu cenu veću od prosečne cene svih proizvoda?",
+      "pitanjeEn": "Which categories have an average price higher than the average price of all products?",
+      "goldSql": "SELECT k.naziv, round(avg(p.cena), 2) AS prosek FROM prodavnica.proizvodi p JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id GROUP BY k.naziv HAVING avg(p.cena) > (SELECT avg(cena) FROM prodavnica.proizvodi)",
+      "oznake": [
+        "subquery",
+        "having",
+        "aggregate-over-aggregate"
+      ]
+    },
+    {
+      "id": "P-T07",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Prikaži tri najprodavanija proizvoda u svakoj kategoriji, po ukupnoj naručenoj količini.",
+      "pitanjeEn": "Show the three best-selling products in each category, by total ordered quantity.",
+      "goldSql": "WITH prodaja AS ( SELECT p.proizvod_id, p.naziv, p.kategorija_id, SUM(s.kolicina) AS komada FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id GROUP BY p.proizvod_id, p.naziv, p.kategorija_id), rang AS ( SELECT prodaja.*, ROW_NUMBER() OVER (PARTITION BY kategorija_id ORDER BY komada DESC, proizvod_id) AS r FROM prodaja) SELECT k.naziv AS kategorija, rang.naziv, rang.komada FROM rang JOIN prodavnica.kategorije k ON k.kategorija_id = rang.kategorija_id WHERE rang.r <= 3",
+      "oznake": [
+        "cte",
+        "window",
+        "top-n-per-group"
+      ]
+    },
+    {
+      "id": "P-T08",
+      "tezina": "tezak",
+      "baza": "prodavnica",
+      "pitanjeSr": "Koji kupci su naručivali tokom 2023. godine, a nijednom tokom 2024. godine?",
+      "pitanjeEn": "Which customers placed orders during 2023 but none during 2024?",
+      "goldSql": "SELECT kupac_id FROM prodavnica.porudzbine WHERE EXTRACT(YEAR FROM datum_porudzbine) = 2023 EXCEPT SELECT kupac_id FROM prodavnica.porudzbine WHERE EXTRACT(YEAR FROM datum_porudzbine) = 2024",
+      "oznake": [
+        "except",
+        "date"
+      ]
+    },
+    {
+      "id": "F-T01",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Za svaki smer prikaži studenta sa najboljim prosekom.",
+      "pitanjeEn": "For each study program show the student with the best average grade.",
+      "goldSql": "WITH prosek AS ( SELECT st.student_id, st.ime, st.prezime, st.smer_id, avg(pi.ocena) AS p FROM fakultet.studenti st JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE pi.ocena IS NOT NULL GROUP BY st.student_id, st.ime, st.prezime, st.smer_id), rang AS ( SELECT prosek.*, ROW_NUMBER() OVER (PARTITION BY smer_id ORDER BY p DESC, student_id) AS r FROM prosek) SELECT s.naziv AS smer, rang.ime, rang.prezime, round(rang.p, 2) AS prosek FROM rang JOIN fakultet.smerovi s ON s.smer_id = rang.smer_id WHERE rang.r = 1",
+      "oznake": [
+        "cte",
+        "window",
+        "top-n-per-group"
+      ]
+    },
+    {
+      "id": "F-T02",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koji studenti nisu položili nijedan ispit?",
+      "pitanjeEn": "Which students have not passed a single exam?",
+      "goldSql": "SELECT st.broj_indeksa, st.ime, st.prezime FROM fakultet.studenti st WHERE NOT EXISTS ( SELECT 1 FROM fakultet.upisi_predmeta u JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE u.student_id = st.student_id AND pi.polozen)",
+      "oznake": [
+        "not-exists",
+        "subquery"
+      ]
+    },
+    {
+      "id": "F-T03",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koji predmeti imaju prosečnu ocenu iznad proseka svog smera?",
+      "pitanjeEn": "Which courses have an average grade above the average of their own study program?",
+      "goldSql": "WITH po_predmetu AS ( SELECT p.predmet_id, p.naziv, p.smer_id, avg(pi.ocena) AS prosek FROM fakultet.predmeti p JOIN fakultet.upisi_predmeta u ON u.predmet_id = p.predmet_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE pi.ocena IS NOT NULL GROUP BY p.predmet_id, p.naziv, p.smer_id) SELECT naziv, round(prosek, 2) AS prosek FROM po_predmetu pp WHERE prosek > (SELECT avg(x.prosek) FROM po_predmetu x WHERE x.smer_id = pp.smer_id)",
+      "oznake": [
+        "cte",
+        "correlated-subquery"
+      ]
+    },
+    {
+      "id": "F-T04",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Rangiraj smerove po prolaznosti na ispitima, od najveće ka najmanjoj.",
+      "pitanjeEn": "Rank the study programs by exam pass rate, from highest to lowest.",
+      "goldSql": "SELECT s.naziv, round(100.0 * count(*) FILTER (WHERE pi.polozen) / count(*), 1) AS prolaznost, RANK() OVER (ORDER BY 100.0 * count(*) FILTER (WHERE pi.polozen) / count(*) DESC) AS rang FROM fakultet.smerovi s JOIN fakultet.studenti st ON st.smer_id = s.smer_id JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id GROUP BY s.naziv ORDER BY rang",
+      "oznake": [
+        "window",
+        "rank",
+        "group-by"
+      ]
+    },
+    {
+      "id": "F-T05",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Prikaži broj položenih ispita po školskoj godini i razliku u odnosu na prethodnu godinu.",
+      "pitanjeEn": "Show the number of passed exams per academic year and the difference from the previous year.",
+      "goldSql": "WITH g AS ( SELECT u.skolska_godina, count(*) FILTER (WHERE pi.polozen) AS polozeno FROM fakultet.upisi_predmeta u JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id GROUP BY u.skolska_godina) SELECT skolska_godina, polozeno, polozeno - LAG(polozeno) OVER (ORDER BY skolska_godina) AS razlika FROM g ORDER BY skolska_godina",
+      "oznake": [
+        "cte",
+        "window",
+        "lag"
+      ]
+    },
+    {
+      "id": "F-T06",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koji profesori ne predaju nijedan predmet?",
+      "pitanjeEn": "Which professors do not teach any course?",
+      "goldSql": "SELECT pr.ime, pr.prezime FROM fakultet.profesori pr WHERE NOT EXISTS (SELECT 1 FROM fakultet.predmeti p WHERE p.profesor_id = pr.profesor_id)",
+      "oznake": [
+        "not-exists",
+        "subquery"
+      ]
+    },
+    {
+      "id": "F-T07",
+      "tezina": "tezak",
+      "baza": "fakultet",
+      "pitanjeSr": "Koji studenti su položili sve predmete koje su upisali?",
+      "pitanjeEn": "Which students passed every course they enrolled in?",
+      "goldSql": "SELECT st.broj_indeksa, st.ime, st.prezime FROM fakultet.studenti st JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id GROUP BY st.student_id, st.broj_indeksa, st.ime, st.prezime HAVING count(*) = count(*) FILTER (WHERE pi.polozen)",
+      "oznake": [
+        "join",
+        "having",
+        "division"
+      ]
+    }
+  ]
 }
