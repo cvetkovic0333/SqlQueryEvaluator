@@ -222,11 +222,25 @@ public sealed class BenchmarkRunner(
             try
             {
                 var provajder = fabrika.Kreiraj(opis.Id);
+
+                // MaxTokens mora da bude izdašan i za ovako trivijalan poziv:
+                // modeli koji "razmišljaju" pre odgovora (GPT-OSS, Qwen3)
+                // potroše mali budžet na razmišljanje i vrate prazan tekst,
+                // pa bi ispravan model izgledao kao pokvaren.
                 var odgovor = await provajder.CompleteAsync(new LlmRequest(
                     "You are a test probe. Reply with exactly: OK",
-                    "Reply with exactly: OK", MaxTokens: 10), ct);
+                    "Reply with exactly: OK", MaxTokens: 512), ct);
 
-                Console.WriteLine($"radi  ({odgovor.TrajanjeMs} ms, odgovor: \"{Skrati(odgovor.Text)}\")");
+                if (string.IsNullOrWhiteSpace(odgovor.Text))
+                {
+                    Console.WriteLine($"odgovorio, ali PRAZAN tekst ({odgovor.TrajanjeMs} ms, " +
+                                      $"{odgovor.IzlazniTokeni} izlaznih tokena) — proveri MaxTokens");
+                }
+                else
+                {
+                    Console.WriteLine($"radi  ({odgovor.TrajanjeMs} ms, odgovor: \"{Skrati(odgovor.Text)}\")");
+                }
+
                 ispravnih++;
             }
             catch (LlmException ex)
