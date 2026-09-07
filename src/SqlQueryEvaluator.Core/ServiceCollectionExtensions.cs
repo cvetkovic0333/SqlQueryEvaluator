@@ -49,7 +49,16 @@ public static class ServiceCollectionExtensions
         })
         .AddStandardResilienceHandler(opcije =>
         {
-            opcije.Retry.MaxRetryAttempts = 4;
+            // 429 se NAMERNO ne ponavlja ovde. Polly poštuje zaglavlje
+            // Retry-After, a Groq u njemu traži i po 337 sekundi — to probije
+            // ukupni timeout ispod i ceo poziv padne kao "timeout", pa se ne
+            // vidi da je u pitanju kvota. Zato 429 ide netaknut do runner-a,
+            // koji sačeka koliko treba i ponovi zadatak.
+            opcije.Retry.ShouldHandle = args => ValueTask.FromResult(
+                args.Outcome.Exception is HttpRequestException
+                || (args.Outcome.Result is { } o && (int)o.StatusCode >= 500));
+
+            opcije.Retry.MaxRetryAttempts = 2;
             opcije.Retry.Delay = TimeSpan.FromSeconds(2);
             opcije.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
             opcije.Retry.UseJitter = true;
