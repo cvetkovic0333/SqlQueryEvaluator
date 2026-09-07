@@ -129,4 +129,32 @@ public class SqlSanitizerTests
     {
         Assert.False(SqlSanitizer.Proveri(sql).Prihvacen);
     }
+
+    [Fact]
+    public void Uklanja_think_blok_koji_modeli_koji_razmisljaju_dodaju()
+    {
+        // Qwen3 i slični ispisuju tok razmišljanja pre odgovora. Bez
+        // uklanjanja bloka upit počinje tekstom i biva odbijen, iako je
+        // model ispod dao potpuno ispravan SQL.
+        var odgovor = """
+            <think>
+            Provericu prvo tabelu kupci, pa cu spojiti sa porudzbinama...
+            </think>
+            SELECT ime FROM prodavnica.kupci
+            """;
+
+        var r = SqlSanitizer.Proveri(odgovor);
+        Assert.True(r.Prihvacen, r.Razlog);
+        Assert.StartsWith("SELECT", r.Sql);
+        Assert.DoesNotContain("think", r.Sql);
+    }
+
+    [Fact]
+    public void Odbija_odgovor_koji_je_samo_nedovrseno_razmisljanje()
+    {
+        // Model je dostigao granicu tokena usred razmišljanja — nema SQL-a.
+        var r = SqlSanitizer.Proveri("<think>Hajde da razmislim o ovom upitu");
+        Assert.False(r.Prihvacen);
+        Assert.Contains("razmišljanja", r.Razlog!);
+    }
 }

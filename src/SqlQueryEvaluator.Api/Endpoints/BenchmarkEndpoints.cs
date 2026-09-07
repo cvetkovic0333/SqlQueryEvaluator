@@ -22,8 +22,15 @@ public static class BenchmarkEndpoints
             IOptions<TextToSqlOptions> opcije,
             CancellationToken ct) =>
         {
-            var redovi = await repo.RezultatiAsync(pokretanje, ct);
             var pokretanja = await repo.SvaPokretanjaAsync(ct);
+
+            // Bez ovoga bi se rezultati svih pokretanja sabrali u jedan
+            // prosek — probni run od tri zadatka bi krivio brojeve punog
+            // testa. Podrazumevano se prikazuje poslednje pokretanje.
+            var izabrano = pokretanje ?? pokretanja.FirstOrDefault()?.PokretanjeId;
+            var redovi = izabrano is null
+                ? []
+                : await repo.RezultatiAsync(izabrano, ct);
 
             if (redovi.Count == 0)
             {
@@ -31,6 +38,7 @@ public static class BenchmarkEndpoints
                 {
                     imaPodataka = false,
                     poruka = "Benchmark još nije pokrenut. Pokreni: dotnet run --project src/SqlQueryEvaluator.Benchmark",
+                    izabranoPokretanje = izabrano,
                     pokretanja
                 });
             }
@@ -54,6 +62,7 @@ public static class BenchmarkEndpoints
             {
                 imaPodataka = true,
                 pokretanja,
+                izabranoPokretanje = izabrano,
                 pobednik,
                 pobednikNaziv = pobednik is null ? null : Naziv(pobednik),
                 podesenModel = opcije.Value.DefaultModelId,

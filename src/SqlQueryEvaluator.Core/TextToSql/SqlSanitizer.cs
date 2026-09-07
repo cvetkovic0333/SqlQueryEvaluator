@@ -38,12 +38,31 @@ public static class SqlSanitizer
     private static readonly Regex Ograda =
         new(@"^\s*```[a-zA-Z]*\s*|\s*```\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
+    /// <summary>
+    /// Modeli koji "razmišljaju naglas" (Qwen3, DeepSeek-R1 i slični) ispisuju
+    /// tok razmišljanja u &lt;think&gt; bloku pre samog odgovora. Taj blok se
+    /// uklanja, inače bi upit počinjao tekstom umesto sa SELECT i bio odbijen
+    /// iako je model dao ispravan SQL.
+    /// </summary>
+    private static readonly Regex RazmisljanjeZatvoreno =
+        new(@"<think>.*?</think>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+    private static readonly Regex RazmisljanjeNezatvoreno =
+        new(@"<think>.*$", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
     public static SanitizerResult Proveri(string? sirovSql)
     {
         if (string.IsNullOrWhiteSpace(sirovSql))
             return SanitizerResult.Odbijen("Model nije vratio nikakav SQL.");
 
-        var sql = Ograda.Replace(sirovSql, "").Trim();
+        var bezRazmisljanja = RazmisljanjeZatvoreno.Replace(sirovSql, "");
+        bezRazmisljanja = RazmisljanjeNezatvoreno.Replace(bezRazmisljanja, "");
+
+        if (string.IsNullOrWhiteSpace(bezRazmisljanja))
+            return SanitizerResult.Odbijen(
+                "Model je vratio samo tok razmišljanja, bez SQL upita (verovatno je dostigao granicu tokena).");
+
+        var sql = Ograda.Replace(bezRazmisljanja, "").Trim();
 
         // Dollar-quoting ($$...$$) nema šta da traži u SELECT upitu, a jeste
         // zgodan način da se sakrije sadržaj od provere — odbija se odmah.
