@@ -8,9 +8,14 @@ using SqlQueryEvaluator.Core;
 // bin foldera preko `dotnet run`.
 PodesiRadniDirektorijum();
 
+// appsettings.Development.json drži lozinke i API ključeve i nikada ne ide
+// u repo (u .gitignore je). Učitava se po putanji, pa ne zavisi od atributa
+// koji SDK generiše pri build-u — za razliku od user-secrets, koji na nekim
+// mašinama tiho izostanu i aplikacija se podigne bez lozinke.
 var konfiguracija = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile("appsettings.Development.json", optional: true)
     .AddUserSecrets<Program>(optional: true)
     .AddEnvironmentVariables()
     .Build();
