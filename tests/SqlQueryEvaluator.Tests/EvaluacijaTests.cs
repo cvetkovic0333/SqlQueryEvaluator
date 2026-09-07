@@ -233,4 +233,25 @@ public class LlmJudgeTests
         Assert.False(o.Tacan);
         Assert.Contains("nije uspeo", o.Obrazlozenje);
     }
+
+    [Fact]
+    public void Spasava_ocenu_iz_presecenog_json_a()
+    {
+        // Sudija koji "razmislja" ume da potrosi budzet tokena i vrati
+        // presecen JSON. Ocena je na pocetku odgovora, pa se izvlaci umesto
+        // da se ceo poziv (i kvota potrosena na njega) baci.
+        var o = LlmJudge.Rasclani(
+            """{"ocena": 4, "tacan": true, "obrazlozenje": "Upit je logic""", "m");
+
+        Assert.Equal(4, o.Ocena);
+        Assert.True(o.Tacan);
+        Assert.Contains("Upit je logic", o.Obrazlozenje);
+    }
+
+    [Fact]
+    public void Ne_spasava_nista_kada_ni_ocene_nema()
+    {
+        var o = LlmJudge.Rasclani("{\"nesto\": \"drugo\"", "m");
+        Assert.Equal(0, o.Ocena);
+    }
 }

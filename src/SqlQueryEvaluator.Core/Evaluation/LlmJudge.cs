@@ -87,8 +87,12 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
         try
         {
             var provajder = fabrika.Kreiraj(modelSudijeId);
+
+            // MaxTokens mora da bude izdašan: sudije koje "razmišljaju" pre
+            // odgovora potroše deo budžeta na razmišljanje, pa se JSON preseče
+            // na pola i ocena se izgubi iako je model odradio posao.
             var odgovor = await provajder.CompleteAsync(
-                new LlmRequest(SistemskiPrompt, prompt.ToString(), Temperature: 0, MaxTokens: 400, JsonMode: true),
+                new LlmRequest(SistemskiPrompt, prompt.ToString(), Temperature: 0, MaxTokens: 1500, JsonMode: true),
                 ct);
 
             return Rasclani(odgovor.Text, modelSudijeId);
@@ -108,7 +112,14 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
     {
         var podudaranje = Regex.Match(odgovor, @"\{.*\}", RegexOptions.Singleline);
         if (!podudaranje.Success)
-            return OcenaSudije.Greska($"odgovor nije sadržao JSON ({Skrati(odgovor)})", modelSudije);
+        {
+            // Odgovor nema zatvorenu vitičastu zagradu — najčešće zato što je
+            // presečen na granici tokena. Ocena je ipak na početku JSON-a, pa
+            // se izvlači pojedinačno umesto da se ceo odgovor odbaci.
+            var spaseno = SpasiIzPresecenog(odgovor, modelSudije);
+            return spaseno ?? OcenaSudije.Greska(
+                $"odgovor nije sadržao JSON ({Skrati(odgovor)})", modelSudije);
+        }
 
         try
         {
@@ -134,6 +145,26 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
         {
             return OcenaSudije.Greska($"neispravan JSON ({ex.Message})", modelSudije);
         }
+    }
+
+    /// <summary>
+    /// Poslednja odbrana kada je JSON presečen na granici tokena. Traži se
+    /// samo ocena; ako ni nje nema, odgovor se odbacuje.
+    /// </summary>
+    private static OcenaSudije? SpasiIzPresecenog(string odgovor, string modelSudije)
+    {
+        var ocenaM = Regex.Match(odgovor, @"""ocena""\s*:\s*""?(\d+)", RegexOptions.IgnoreCase);
+        if (!ocenaM.Success) return null;
+
+        var ocena = Math.Clamp(int.Parse(ocenaM.Groups[1].Value), 1, 5);
+
+        var obrM = Regex.Match(odgovor, @"""obrazlozenje""\s*:\s*""([^""]*)", RegexOptions.IgnoreCase);
+        var obrazlozenje = obrM.Success ? obrM.Groups[1].Value.Trim() : "";
+        if (obrazlozenje.Length > 0) obrazlozenje += "…";
+
+        return new OcenaSudije(ocena, ocena >= 4,
+            obrazlozenje.Length > 0 ? obrazlozenje : "(odgovor sudije je bio presečen)",
+            modelSudije);
     }
 
     private static int CitajCeoBroj(JsonElement e) => e.ValueKind switch
