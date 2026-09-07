@@ -62,7 +62,8 @@ public sealed class OpenAiCompatibleProvider(
 
         var sadrzaj = await odgovor.Content.ReadAsStringAsync(ct);
         if (!odgovor.IsSuccessStatusCode)
-            throw new LlmException(SkratiGresku(sadrzaj), (int)odgovor.StatusCode);
+            throw new LlmException(SkratiGresku(sadrzaj), (int)odgovor.StatusCode,
+                cekajSekundi: ProcitajRetryAfter(odgovor));
 
         try
         {
@@ -88,6 +89,24 @@ public sealed class OpenAiCompatibleProvider(
         {
             throw new LlmException($"Neočekivan oblik odgovora od {Opis.Provider}: {SkratiGresku(sadrzaj)}", null, ex);
         }
+    }
+
+
+    /// <summary>
+    /// Provajder u zaglavlju Retry-After kaže koliko treba čekati. Bez toga
+    /// se pogađa, a svako promašeno pogađanje troši jedan zahtev iz dnevne
+    /// kvote i ništa ne dobija.
+    /// </summary>
+    private static int? ProcitajRetryAfter(HttpResponseMessage odgovor)
+    {
+        if (odgovor.Headers.RetryAfter?.Delta is { } razmak)
+            return (int)Math.Ceiling(razmak.TotalSeconds);
+
+        if (odgovor.Headers.TryGetValues("retry-after", out var vrednosti)
+            && int.TryParse(vrednosti.FirstOrDefault(), out var sekundi))
+            return sekundi;
+
+        return null;
     }
 
     private static string SkratiGresku(string telo) =>

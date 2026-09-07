@@ -114,17 +114,34 @@ public sealed class BenchmarkRunner(
                     uradjeno++;
                     var oznaka = $"[{uradjeno + preskoceno}/{ukupno}] {model} · {zadatak.Id} · {jezik}";
 
-                    try
+                    // Kada provajder javi da je kvota probijena, čeka se tačno
+                    // onoliko koliko on traži, pa se zadatak ponavlja. Slepo
+                    // ponavljanje ovde samo troši dnevnu kvotu bez ijednog
+                    // upotrebljivog rezultata.
+                    var pokusaj = 0;
+                    while (true)
                     {
-                        var rezultat = await ObradiAsync(pokretanjeId, model, zadatak, jezik, modelSudije, ct);
-                        await repo.UpisiRezultatAsync(rezultat, ct);
+                        try
+                        {
+                            var rezultat = await ObradiAsync(pokretanjeId, model, zadatak, jezik, modelSudije, ct);
+                            await repo.UpisiRezultatAsync(rezultat, ct);
 
-                        var znak = rezultat.RezultatIsti ? "✓" : rezultat.SqlIspravan ? "≈" : "✗";
-                        Console.WriteLine($"{oznaka}  {znak}  sudija={rezultat.OcenaSudije?.ToString() ?? "-"}  {rezultat.TrajanjeMs}ms");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"{oznaka}  GREŠKA: {ex.Message}");
+                            var znak = rezultat.RezultatIsti ? "✓" : rezultat.SqlIspravan ? "≈" : "✗";
+                            Console.WriteLine($"{oznaka}  {znak}  sudija={rezultat.OcenaSudije?.ToString() ?? "-"}  {rezultat.TrajanjeMs}ms");
+                            break;
+                        }
+                        catch (LlmException ex) when (ex.RateLimit && pokusaj < 3)
+                        {
+                            pokusaj++;
+                            var cekaj = Math.Clamp(ex.CekajSekundi ?? 60, 5, 420);
+                            Console.WriteLine($"{oznaka}  kvota probijena — čekam {cekaj}s (pokušaj {pokusaj}/3)");
+                            await Task.Delay(TimeSpan.FromSeconds(cekaj), ct);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"{oznaka}  GREŠKA: {ex.Message}");
+                            break;
+                        }
                     }
 
                     // Besplatni tierovi imaju stroge rate limite; pauza između
