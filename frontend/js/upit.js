@@ -44,6 +44,7 @@ export function initUpit() {
   $("#dugme-prevedi").addEventListener("click", prevedi);
   $("#dugme-izvrsi").addEventListener("click", izvrsi);
   $("#dugme-kopiraj").addEventListener("click", kopiraj);
+  $("#dugme-pdf").addEventListener("click", izveziPdf);
 
   $("#upit-model").addEventListener("change", (e) => postavi({ aktivniModel: e.target.value }));
 
@@ -259,6 +260,51 @@ async function izvrsi() {
     $("#kartica-rezultat").classList.add("hidden");
   } finally {
     postaviUcitavanje(dugme, false, "Izvrši upit");
+  }
+}
+
+/**
+ * Preuzima PDF sa rezultatom upita. Browser ne može da sačuva fajl direktno
+ * iz POST odgovora, pa se sadržaj pretvara u privremeni blob i klikne se
+ * nevidljiv link — to pokreće standardno preuzimanje.
+ */
+async function izveziPdf() {
+  const o = daj().poslednjiPrevod;
+  if (!o?.sql) return;
+
+  const dugme = $("#dugme-pdf");
+  const status = $("#pdf-status");
+  postaviUcitavanje(dugme, true, "Dokumentuj u PDF");
+  status.className = "upit-status";
+  status.textContent = "";
+
+  try {
+    const blob = await api.pdf({
+      sql: o.sql,
+      pitanje: $("#upit-tekst").value.trim(),
+      modelId: o.modelId,
+      ocena: o.ocena?.vrednost ?? null,
+      obrazlozenje: o.ocena?.obrazlozenje ?? null,
+    });
+
+    const url = URL.createObjectURL(blob);
+    const veza = document.createElement("a");
+    veza.href = url;
+    veza.download = `rezultat-upita-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}.pdf`;
+    document.body.appendChild(veza);
+    veza.click();
+    veza.remove();
+
+    // Blob se oslobađa tek pošto je browser preuzeo sadržaj.
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+
+    status.className = "upit-status ok";
+    status.textContent = "PDF je preuzet.";
+  } catch (e) {
+    status.className = "upit-status greska";
+    status.textContent = `Izvoz nije uspeo: ${e.message}`;
+  } finally {
+    postaviUcitavanje(dugme, false, "Dokumentuj u PDF");
   }
 }
 

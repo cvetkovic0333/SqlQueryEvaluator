@@ -42,4 +42,21 @@ export const api = {
   obrisiIstoriju: () => zahtev("/api/istorija", { method: "DELETE" }),
 
   benchmark: () => zahtev("/api/benchmark/pregled"),
+
+  // Vraća PDF kao binarni sadržaj, ne JSON — zato zaobilazi zahtev().
+  pdf: async (telo) => {
+    const odgovor = await fetch("/api/izvoz/pdf", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(telo),
+    });
+
+    if (!odgovor.ok) {
+      let poruka = `HTTP ${odgovor.status}`;
+      try { poruka = (await odgovor.json()).greska ?? poruka; } catch { /* telo nije JSON */ }
+      throw new Error(poruka);
+    }
+
+    return odgovor.blob();
+  },
 };

@@ -3,6 +3,9 @@ using Microsoft.Extensions.FileProviders;
 using SqlQueryEvaluator.Api.Endpoints;
 using SqlQueryEvaluator.Core;
 
+// QuestPDF Community licenca — besplatna za pojedince i male organizacije.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Tajne se traže IZRIČITO, iako ih ASP.NET u Development režimu obično doda
