@@ -61,6 +61,7 @@ public static class SemaEndpoints
             string baza,
             string tabela,
             int? limit,
+            int? offset,
             SchemaIntrospector introspektor,
             QueryExecutor izvrsilac,
             IOptions<TextToSqlOptions> opcije,
@@ -77,8 +78,17 @@ public static class SemaEndpoints
                 return Results.NotFound(new { greska = $"Tabela '{tabela}' ne postoji u bazi '{baza}'." });
 
             var koliko = Math.Clamp(limit ?? 50, 1, 500);
+            var preskoci = Math.Max(offset ?? 0, 0);
+
+            // Bez ORDER BY, PostgreSQL ne garantuje isti redosled između dva
+            // upita, pa bi listanje "sledećih 50" umelo da preskoči ili
+            // ponovi redove. Sortira se po primarnom ključu.
+            var redosled = nadjena.Kolone.FirstOrDefault(k => k.PrimarniKljuc)?.Naziv
+                           ?? nadjena.Kolone.First().Naziv;
+
             var rezultat = await izvrsilac.IzvrsiAsync(
-                $"SELECT * FROM {sema.Naziv}.{nadjena.Naziv}", koliko, ct);
+                $"SELECT * FROM {sema.Naziv}.{nadjena.Naziv} ORDER BY {redosled} OFFSET {preskoci}",
+                koliko, ct);
 
             if (!rezultat.Uspesno)
                 return Results.Problem(rezultat.Greska);
@@ -86,9 +96,12 @@ public static class SemaEndpoints
             return Results.Ok(new
             {
                 tabela = nadjena.Naziv,
+                opis = nadjena.Opis,
                 ukupnoRedova = nadjena.BrojRedova,
+                offset = preskoci,
                 kolone = rezultat.Kolone,
                 redovi = rezultat.Redovi,
+                imaJos = preskoci + rezultat.BrojRedova < nadjena.BrojRedova,
                 trajanjeMs = rezultat.TrajanjeMs
             });
         });
