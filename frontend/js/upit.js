@@ -45,12 +45,6 @@ export function initUpit() {
   $("#dugme-izvrsi").addEventListener("click", izvrsi);
   $("#dugme-kopiraj").addEventListener("click", kopiraj);
 
-  $("#upit-baza").addEventListener("change", (e) => {
-    postavi({ aktivnaBaza: e.target.value, sema: null, izabraneTabele: new Set() });
-    $("#izbor-baze").value = e.target.value;
-    nacrtajPredloge();
-  });
-
   $("#upit-model").addEventListener("change", (e) => postavi({ aktivniModel: e.target.value }));
 
   $$("#prekidac-jezik .prekidac-opcija").forEach((dugme) => {
@@ -220,12 +214,11 @@ async function kopiraj() {
   }
 }
 
-/** Poziva se iz istorije: vraća stari upit u editor. */
+/** Poziva se iz istorije: vraća stari upit u editor u tabu "Baza i upit". */
 export function ucitajUEditor(stavka) {
   $("#upit-tekst").value = stavka.pitanje;
   if (stavka.baza) {
     postavi({ aktivnaBaza: stavka.baza });
-    $("#upit-baza").value = stavka.baza;
     $("#izbor-baze").value = stavka.baza;
   }
   $$("#prekidac-jezik .prekidac-opcija").forEach((d) =>
@@ -233,7 +226,7 @@ export function ucitajUEditor(stavka) {
   postavi({ jezik: stavka.jezik });
   nacrtajPredloge();
 
-  $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === "upit"));
-  $$(".panel").forEach((p) => p.classList.toggle("is-active", p.id === "tab-upit"));
+  $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === "baza"));
+  $$(".panel").forEach((p) => p.classList.toggle("is-active", p.id === "tab-baza"));
   $("#upit-tekst").focus();
 }

@@ -31,7 +31,6 @@ async function ucitajBaze() {
       .join("");
 
     $("#izbor-baze").innerHTML = opcije;
-    $("#upit-baza").innerHTML = opcije;
   } catch (e) {
     poruka(`Ne mogu da učitam listu baza: ${e.message}`, true);
   }
@@ -71,7 +70,7 @@ async function ucitajModele() {
  * Umesto tihe greške pri prvom kliku, upozorenje stoji odmah u tabu "Upit".
  */
 function upozoriNaKljuceve() {
-  const cilj = $("#tab-upit .upit-raspored");
+  const cilj = $("#tab-baza .baza-desno");
   cilj.insertAdjacentHTML("afterbegin", `
     <div class="kartica" style="border-color:var(--zuta)">
       <div class="kartica-zaglavlje">
@@ -93,6 +92,7 @@ function priPromeniTaba(tab) {
   if (tab === "rezultati") ucitajDashboard();
   if (tab === "istorija") osveziIstoriju();
   if (tab === "baza" && !s.sema) ucitajSemu();
+  if (tab === "baza") nacrtajPredloge();
 }
 
 start();
