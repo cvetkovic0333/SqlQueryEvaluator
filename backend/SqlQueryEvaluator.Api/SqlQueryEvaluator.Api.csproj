@@ -4,6 +4,10 @@
     <ProjectReference Include="..\SqlQueryEvaluator.Core\SqlQueryEvaluator.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2026.8.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>

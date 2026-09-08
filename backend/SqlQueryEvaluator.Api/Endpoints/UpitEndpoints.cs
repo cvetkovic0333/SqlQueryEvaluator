@@ -14,6 +14,13 @@ public sealed record PrevodZahtev(
 
 public sealed record IzvrsiZahtev(string Sql, long? UpitId);
 
+public sealed record PdfZahtev(
+    string Sql,
+    string? Pitanje,
+    string? ModelId,
+    int? Ocena,
+    string? Obrazlozenje);
+
 public static class UpitEndpoints
 {
     public static void MapUpitEndpoints(this WebApplication app)
@@ -123,6 +130,34 @@ public static class UpitEndpoints
                 odsecen = rezultat.Odsecen,
                 trajanjeMs = rezultat.TrajanjeMs
             });
+        });
+
+        // Izvoz rezultata u PDF. Upit se izvrsava PONOVO umesto da se primi
+        // gotova tabela od klijenta — dokument tako uvek prikazuje ono sto
+        // je stvarno u bazi, a ne ono sto je neko poslao serveru.
+        app.MapPost("/api/izvoz/pdf", async (
+            PdfZahtev zahtev,
+            QueryExecutor izvrsilac,
+            CancellationToken ct) =>
+        {
+            var provera = SqlSanitizer.Proveri(zahtev.Sql);
+            if (!provera.Prihvacen)
+                return Results.BadRequest(new { greska = provera.Razlog });
+
+            var rezultat = await izvrsilac.IzvrsiAsync(provera.Sql, ct);
+            if (!rezultat.Uspesno)
+                return Results.BadRequest(new { greska = rezultat.Greska });
+
+            var pdf = PdfIzvoz.Napravi(new PdfPodaci(
+                string.IsNullOrWhiteSpace(zahtev.Pitanje) ? "(pitanje nije zabelezeno)" : zahtev.Pitanje,
+                provera.Sql,
+                zahtev.ModelId ?? "nepoznat model",
+                zahtev.Ocena,
+                zahtev.Obrazlozenje,
+                rezultat));
+
+            var naziv = $"rezultat-upita-{DateTime.Now:yyyyMMdd-HHmm}.pdf";
+            return Results.File(pdf, "application/pdf", naziv);
         });
     }
 }
