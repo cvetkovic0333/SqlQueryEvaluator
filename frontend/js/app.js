@@ -51,12 +51,6 @@ async function ucitajModele() {
     const pobednik = rang[0] ?? podaci.podrazumevaniModel;
     postavi({ modeli: podaci.modeli, rangLista: rang, aktivniModel: pobednik });
 
-    const podrazumevani = podaci.modeli.find((m) => m.id === podaci.podrazumevaniModel);
-    const sudija = podaci.modeli.find((m) => m.id === podaci.modelSudije);
-
-    $("#pill-model-value").textContent = podrazumevani?.naziv ?? "nije podešen";
-    $("#pill-sudija-value").textContent = sudija?.naziv ?? "nije podešen";
-
     // Model bez ključa se vidi u listi, ali je jasno označen i ne može da se
     // izabere — bolje nego da poziv pukne tek kada korisnik pritisne dugme.
     $("#upit-model").innerHTML = podaci.modeli.map((m) => `
@@ -65,11 +59,7 @@ async function ucitajModele() {
         ${escapeHtml(m.naziv)}${m.imaKljuc ? "" : " — nema API ključ"}${m.id === pobednik ? " ★" : ""}
       </option>`).join("");
 
-    if (!podaci.spremno) {
-      $("#pill-model").classList.add("hidden");
-      $("#pill-sudija").classList.add("hidden");
-      upozoriNaKljuceve();
-    }
+    if (!podaci.spremno) upozoriNaKljuceve();
   } catch (e) {
     poruka(`Ne mogu da učitam listu modela: ${e.message}`, true);
   }

@@ -56,6 +56,11 @@ export function initUpit() {
     });
   });
 
+  // Čim korisnik krene da kuca novo pitanje, prethodni odgovor se sklanja.
+  // Inače na ekranu stoji SQL i rezultat starog pitanja, pa deluje kao da
+  // se odnose na ono što se upravo kuca.
+  $("#upit-tekst").addEventListener("input", ocistiPrethodniOdgovor);
+
   // Ctrl+Enter šalje upit — brže od traženja dugmeta mišem.
   $("#upit-tekst").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -147,6 +152,20 @@ async function prevedi() {
   } finally {
     postaviUcitavanje(dugme, false, "Prevedi u SQL");
   }
+}
+
+/** Vraća prikaz na početno stanje: bez generisanog SQL-a i bez rezultata. */
+function ocistiPrethodniOdgovor() {
+  if ($("#kartica-sql").classList.contains("hidden")
+      && $("#kartica-rezultat").classList.contains("hidden")) return;
+
+  $("#kartica-sql").classList.add("hidden");
+  $("#kartica-rezultat").classList.add("hidden");
+  $("#upit-status").textContent = "";
+  $("#upit-status").className = "upit-status";
+  $("#izvrsi-status").textContent = "";
+  $("#izvrsi-status").className = "upit-status";
+  postavi({ poslednjiPrevod: null });
 }
 
 /** Izabrani model prvi, pa ostali po tačnosti iz merenja. */
