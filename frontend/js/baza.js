@@ -13,8 +13,6 @@ const KORAK = 50;
 const ucitano = new Map();
 
 export function initBaza() {
-  $("#dugme-ucitaj-bazu").addEventListener("click", () => ucitajSemu(true));
-
   $("#izbor-baze").addEventListener("change", (e) => {
     postavi({ aktivnaBaza: e.target.value, sema: null, izabraneTabele: new Set() });
     ucitano.clear();
