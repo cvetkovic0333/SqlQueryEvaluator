@@ -9,8 +9,11 @@ import { daj, postavi } from "./stanje.js";
 
 const KORAK = 50;
 
-// Koliko je redova do sada učitano za svaku prikazanu tabelu.
+// Koliko je redova do sada učitano za svaku prikazanu tabelu, ima li još,
+// i da li je dopuna već u toku (da skrol ne pokrene dva ista zahteva).
 const ucitano = new Map();
+const imaJos = new Map();
+const ucitavaSe = new Set();
 
 export function initBaza() {
   $("#izbor-baze").addEventListener("change", (e) => {
@@ -90,6 +93,7 @@ function osveziPrikaz() {
 
   if (izabrane.length === 0) {
     ucitano.clear();
+    imaJos.clear();
     kontejner.innerHTML =
       `<div class="prazno-malo">Čekiraj tabelu sa leve strane da vidiš njen sadržaj.</div>`;
     return;
@@ -100,6 +104,7 @@ function osveziPrikaz() {
   [...ucitano.keys()].forEach((naziv) => {
     if (!s.izabraneTabele.has(naziv)) {
       ucitano.delete(naziv);
+      imaJos.delete(naziv);
       kontejner.querySelector(`[data-kartica="${naziv}"]`)?.remove();
     }
   });
@@ -123,12 +128,11 @@ function osveziPrikaz() {
           </div>
           <span class="kartica-opis" data-brojac="${escapeHtml(naziv)}"></span>
         </div>
-        <div class="tabela-okvir">
+        <div class="tabela-okvir" data-okvir="${escapeHtml(naziv)}">
           <table class="tabela" data-grid="${escapeHtml(naziv)}">
             <tbody><tr><td class="null"><span class="vrtenje"></span> Učitavam…</td></tr></tbody>
           </table>
         </div>
-        <div class="ucitaj-jos" data-podnozje="${escapeHtml(naziv)}"></div>
       </div>`);
 
     ucitajStranu(naziv, 0);
@@ -136,50 +140,57 @@ function osveziPrikaz() {
 }
 
 /**
- * Dovlači sledećih 50 redova i dodaje ih na postojeće, umesto da ih zameni —
- * korisnik tako listanjem dolazi do kraja tabele bez gubljenja prethodnog.
+ * Dovlači sledeću grupu redova i dodaje ih na postojeće. Nema dugmeta —
+ * redovi stižu sami kada se dođe blizu dna, pa se tabela pregleda običnim
+ * skrolovanjem, isto kao rezultat upita.
  */
 async function ucitajStranu(naziv, offset) {
   const s = daj();
   const grid = document.querySelector(`[data-grid="${naziv}"]`);
-  const podnozje = document.querySelector(`[data-podnozje="${naziv}"]`);
+  const okvir = document.querySelector(`[data-okvir="${naziv}"]`);
   const brojac = document.querySelector(`[data-brojac="${naziv}"]`);
-  if (!grid) return;
+  if (!grid || ucitavaSe.has(naziv)) return;
+
+  ucitavaSe.add(naziv);
 
   try {
     const p = await api.pregled(s.aktivnaBaza, naziv, KORAK, offset);
     if (!document.querySelector(`[data-grid="${naziv}"]`)) return; // odčekirana u međuvremenu
 
-    if (offset === 0) {
-      nacrtajTabelu(grid, p.kolone, p.redovi);
-    } else {
-      dodajRedove(grid, p.redovi);
-    }
+    if (offset === 0) nacrtajTabelu(grid, p.kolone, p.redovi);
+    else dodajRedove(grid, p.redovi);
 
-    const ukupnoPrikazano = offset + p.redovi.length;
-    ucitano.set(naziv, ukupnoPrikazano);
+    const prikazano = offset + p.redovi.length;
+    ucitano.set(naziv, prikazano);
+    imaJos.set(naziv, p.imaJos);
 
-    brojac.textContent =
-      `prikazano ${brojFormat(ukupnoPrikazano)} od ${brojFormat(p.ukupnoRedova)} · ${trajanje(p.trajanjeMs)}`;
+    brojac.textContent = p.imaJos
+      ? `${brojFormat(prikazano)} od ${brojFormat(p.ukupnoRedova)} redova`
+      : `svih ${brojFormat(p.ukupnoRedova)} redova`;
 
-    podnozje.innerHTML = p.imaJos
-      ? `<button class="dugme dugme-tiho" data-jos="${escapeHtml(naziv)}">
-           Učitaj sledećih ${Math.min(KORAK, p.ukupnoRedova - ukupnoPrikazano)}
-         </button>`
-      : `<span class="kartica-opis">Prikazana cela tabela.</span>`;
+    if (offset === 0) povežiSkrol(naziv, okvir);
 
-    const dugme = podnozje.querySelector("button");
-    if (dugme) {
-      dugme.addEventListener("click", () => {
-        dugme.disabled = true;
-        dugme.innerHTML = `<span class="vrtenje"></span> Učitavam…`;
-        ucitajStranu(naziv, ucitano.get(naziv));
-      });
+    // Ako je tabela niža od okvira, skrol se nikada neće okinuti, pa se
+    // sledeća grupa dovlači odmah dok se okvir ne popuni.
+    if (p.imaJos && okvir.scrollHeight <= okvir.clientHeight + 40) {
+      ucitavaSe.delete(naziv);
+      await ucitajStranu(naziv, prikazano);
+      return;
     }
   } catch (e) {
     grid.innerHTML = `<tbody><tr><td class="null">Greška: ${escapeHtml(e.message)}</td></tr></tbody>`;
-    podnozje.innerHTML = "";
+  } finally {
+    ucitavaSe.delete(naziv);
   }
+}
+
+function povežiSkrol(naziv, okvir) {
+  okvir.addEventListener("scroll", () => {
+    if (!imaJos.get(naziv) || ucitavaSe.has(naziv)) return;
+
+    const doDna = okvir.scrollHeight - okvir.scrollTop - okvir.clientHeight;
+    if (doDna < 250) ucitajStranu(naziv, ucitano.get(naziv));
+  });
 }
 
 function dodajRedove(grid, redovi) {
