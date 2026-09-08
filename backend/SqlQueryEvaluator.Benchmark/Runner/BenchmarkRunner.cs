@@ -124,6 +124,19 @@ public sealed class BenchmarkRunner(
                         try
                         {
                             var rezultat = await ObradiAsync(pokretanjeId, model, zadatak, jezik, modelSudije, ct);
+
+                            // HTTP klijent puca posle 120 s, pa duže trajanje ne može
+                            // biti stvarna latencija modela — to je merenje pokvareno
+                            // spolja (npr. računar je bio uspavan usred poziva).
+                            // Jedan takav podatak diže prosek modela za red veličine
+                            // i pokvari grafikon brzine, pa se poziv radije ponovi.
+                            if (rezultat.TrajanjeMs > 120_000 && pokusaj < 3)
+                            {
+                                pokusaj++;
+                                Console.WriteLine($"{oznaka}  nerealna latencija ({rezultat.TrajanjeMs} ms) — merim ponovo");
+                                continue;
+                            }
+
                             await repo.UpisiRezultatAsync(rezultat, ct);
 
                             var znak = rezultat.RezultatIsti ? "✓" : rezultat.SqlIspravan ? "≈" : "✗";
