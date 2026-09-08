@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.FileProviders;
 using SqlQueryEvaluator.Api.Endpoints;
 using SqlQueryEvaluator.Core;
 
@@ -26,8 +27,14 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 
 var app = builder.Build();
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+// Frontend živi u zasebnom folderu /frontend, van backend projekta.
+// Servira se i dalje iz istog procesa — jedan `dotnet run` diže i API i
+// korisnički interfejs, bez drugog servera i bez CORS-a.
+var frontend = NadjiFrontend(builder.Environment.ContentRootPath);
+var fajlovi = new PhysicalFileProvider(frontend);
+
+app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fajlovi });
+app.UseStaticFiles(new StaticFileOptions { FileProvider = fajlovi });
 
 // Frontend (wwwroot) se servira iz istog procesa kao i API — nema CORS-a
 // ni drugog dev servera; jedan `dotnet run` diže i UI i API.
@@ -74,6 +81,25 @@ static void ProveriKonfiguraciju(IConfiguration konfiguracija)
     Console.Error.WriteLine();
 
     Environment.Exit(1);
+}
+
+/// <summary>
+/// Traži folder /frontend polazeći od projekta naviše. Radi i kada se
+/// aplikacija pokrene iz korena projekta i kada se pokrene iz bin foldera.
+/// </summary>
+static string NadjiFrontend(string pocetak)
+{
+    var direktorijum = new DirectoryInfo(pocetak);
+    while (direktorijum is not null)
+    {
+        var kandidat = Path.Combine(direktorijum.FullName, "frontend");
+        if (File.Exists(Path.Combine(kandidat, "index.html")))
+            return kandidat;
+        direktorijum = direktorijum.Parent;
+    }
+
+    throw new DirectoryNotFoundException(
+        "Nije pronađen folder 'frontend' sa index.html. Očekuje se u korenu projekta.");
 }
 
 public partial class Program;

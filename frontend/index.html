@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Text-to-SQL Evaluator</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -37,17 +36,13 @@
 </header>
 
 <nav class="tabs" role="tablist">
-  <button class="tab is-active" data-tab="rezultati" role="tab">
+  <button class="tab is-active" data-tab="baza" role="tab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
+    Baza i upit
+  </button>
+  <button class="tab" data-tab="rezultati" role="tab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
     Rezultati modela
-  </button>
-  <button class="tab" data-tab="baza" role="tab">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
-    Baza
-  </button>
-  <button class="tab" data-tab="upit" role="tab">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    Upit
   </button>
   <button class="tab" data-tab="istorija" role="tab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -57,15 +52,104 @@
 
 <main>
 
+  <!-- ================= BAZA I UPIT ================= -->
+  <section class="panel is-active" id="tab-baza">
+    <div class="alatna-traka">
+      <div class="polje">
+        <label for="izbor-baze">Baza</label>
+        <select id="izbor-baze"></select>
+      </div>
+      <button class="dugme dugme-glavno" id="dugme-ucitaj-bazu">Učitaj bazu</button>
+      <div class="alatna-info" id="baza-info"></div>
+    </div>
+
+    <div class="baza-raspored">
+      <aside class="tabele-lista" id="tabele-lista">
+        <div class="prazno-malo">Klikni „Učitaj bazu" da vidiš tabele.</div>
+      </aside>
+
+      <div class="baza-desno">
+
+        <div class="kartica">
+          <div class="kartica-zaglavlje">
+            <h3>Pitanje govornim jezikom</h3>
+            <span class="kartica-opis">Napiši šta te zanima — SQL ne treba da znaš</span>
+          </div>
+
+          <div class="upit-kontrole">
+            <div class="polje">
+              <label for="upit-model">Model</label>
+              <select id="upit-model"></select>
+            </div>
+            <div class="polje">
+              <label>Jezik pitanja</label>
+              <div class="prekidac" id="prekidac-jezik">
+                <button class="prekidac-opcija is-active" data-jezik="sr">Srpski</button>
+                <button class="prekidac-opcija" data-jezik="en">English</button>
+              </div>
+            </div>
+          </div>
+
+          <textarea id="upit-tekst" rows="3"
+                    placeholder="Na primer: Prikaži 10 kupaca sa najvećom potrošnjom"></textarea>
+
+          <div class="predlozi" id="predlozi"></div>
+          <div class="izabrane-tabele" id="izabrane-tabele-info"></div>
+
+          <div class="upit-akcije">
+            <button class="dugme dugme-glavno" id="dugme-prevedi">
+              <span class="dugme-tekst">Prevedi u SQL</span>
+            </button>
+            <span class="upit-status" id="upit-status"></span>
+          </div>
+        </div>
+
+        <div class="kartica hidden" id="kartica-sql">
+          <div class="kartica-zaglavlje sa-akcijom">
+            <div>
+              <h3>Generisani SQL</h3>
+              <span class="kartica-opis" id="sql-meta"></span>
+            </div>
+            <div class="ocena-znacka" id="ocena-znacka"></div>
+          </div>
+
+          <pre class="sql-prikaz" id="sql-prikaz"></pre>
+          <div class="obrazlozenje" id="obrazlozenje"></div>
+
+          <div class="upit-akcije">
+            <button class="dugme dugme-glavno" id="dugme-izvrsi">Izvrši upit</button>
+            <button class="dugme dugme-tiho" id="dugme-kopiraj">Kopiraj SQL</button>
+            <span class="upit-status" id="izvrsi-status"></span>
+          </div>
+        </div>
+
+        <div class="kartica hidden" id="kartica-rezultat">
+          <div class="kartica-zaglavlje">
+            <h3>Rezultat upita</h3>
+            <span class="kartica-opis" id="rezultat-meta"></span>
+          </div>
+          <div class="tabela-okvir">
+            <table class="tabela" id="tabela-rezultat"></table>
+          </div>
+        </div>
+
+        <div class="tabela-detalj" id="tabela-detalj">
+          <div class="prazno-malo">Klikni na tabelu sa leve strane da vidiš njen sadržaj.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- ================= REZULTATI MODELA ================= -->
-  <section class="panel is-active" id="tab-rezultati">
+  <section class="panel" id="tab-rezultati">
     <div id="rezultati-prazno" class="prazno hidden">
       <div class="prazno-ikona">
         <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       </div>
       <h2>Test modela još nije pokrenut</h2>
       <p>Grafikoni se crtaju iz stvarnih rezultata testiranja. Pokreni benchmark pa se vrati ovde.</p>
-      <pre class="kod-blok">dotnet run --project src/SqlQueryEvaluator.Benchmark</pre>
+      <pre class="kod-blok">dotnet run --project backend/SqlQueryEvaluator.Benchmark</pre>
     </div>
 
     <div id="rezultati-sadrzaj" class="hidden">
@@ -135,100 +219,6 @@
         </div>
         <div class="tabela-okvir">
           <table class="tabela" id="tabela-metrike"></table>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= BAZA ================= -->
-  <section class="panel" id="tab-baza">
-    <div class="alatna-traka">
-      <div class="polje">
-        <label for="izbor-baze">Baza</label>
-        <select id="izbor-baze"></select>
-      </div>
-      <button class="dugme dugme-glavno" id="dugme-ucitaj-bazu">Učitaj bazu</button>
-      <div class="alatna-info" id="baza-info"></div>
-    </div>
-
-    <div class="baza-raspored">
-      <aside class="tabele-lista" id="tabele-lista">
-        <div class="prazno-malo">Klikni „Učitaj bazu" da vidiš tabele.</div>
-      </aside>
-      <div class="tabela-detalj" id="tabela-detalj">
-        <div class="prazno-malo">Izaberi tabelu sa leve strane da vidiš njen sadržaj.</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ================= UPIT ================= -->
-  <section class="panel" id="tab-upit">
-    <div class="upit-raspored">
-      <div class="kartica">
-        <div class="kartica-zaglavlje">
-          <h3>Pitanje govornim jezikom</h3>
-          <span class="kartica-opis">Napiši šta te zanima — SQL ne treba da znaš</span>
-        </div>
-
-        <div class="upit-kontrole">
-          <div class="polje">
-            <label for="upit-baza">Baza</label>
-            <select id="upit-baza"></select>
-          </div>
-          <div class="polje">
-            <label for="upit-model">Model</label>
-            <select id="upit-model"></select>
-          </div>
-          <div class="polje">
-            <label>Jezik pitanja</label>
-            <div class="prekidac" id="prekidac-jezik">
-              <button class="prekidac-opcija is-active" data-jezik="sr">Srpski</button>
-              <button class="prekidac-opcija" data-jezik="en">English</button>
-            </div>
-          </div>
-        </div>
-
-        <textarea id="upit-tekst" rows="3"
-                  placeholder="Na primer: Prikaži 10 kupaca sa najvećom potrošnjom u 2024. godini"></textarea>
-
-        <div class="predlozi" id="predlozi"></div>
-
-        <div class="izabrane-tabele" id="izabrane-tabele-info"></div>
-
-        <div class="upit-akcije">
-          <button class="dugme dugme-glavno" id="dugme-prevedi">
-            <span class="dugme-tekst">Prevedi u SQL</span>
-          </button>
-          <span class="upit-status" id="upit-status"></span>
-        </div>
-      </div>
-
-      <div class="kartica hidden" id="kartica-sql">
-        <div class="kartica-zaglavlje sa-akcijom">
-          <div>
-            <h3>Generisani SQL</h3>
-            <span class="kartica-opis" id="sql-meta"></span>
-          </div>
-          <div class="ocena-znacka" id="ocena-znacka"></div>
-        </div>
-
-        <pre class="sql-prikaz" id="sql-prikaz"></pre>
-        <div class="obrazlozenje" id="obrazlozenje"></div>
-
-        <div class="upit-akcije">
-          <button class="dugme dugme-glavno" id="dugme-izvrsi">Izvrši upit</button>
-          <button class="dugme dugme-tiho" id="dugme-kopiraj">Kopiraj SQL</button>
-          <span class="upit-status" id="izvrsi-status"></span>
-        </div>
-      </div>
-
-      <div class="kartica hidden" id="kartica-rezultat">
-        <div class="kartica-zaglavlje">
-          <h3>Rezultat</h3>
-          <span class="kartica-opis" id="rezultat-meta"></span>
-        </div>
-        <div class="tabela-okvir">
-          <table class="tabela" id="tabela-rezultat"></table>
         </div>
       </div>
     </div>

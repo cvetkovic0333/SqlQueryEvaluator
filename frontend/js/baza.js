@@ -10,7 +10,6 @@ export function initBaza() {
   $("#dugme-ucitaj-bazu").addEventListener("click", () => ucitajSemu(true));
   $("#izbor-baze").addEventListener("change", (e) => {
     postavi({ aktivnaBaza: e.target.value, sema: null, izabraneTabele: new Set() });
-    $("#upit-baza").value = e.target.value;
     ocistiPrikaz();
   });
 }
@@ -18,7 +17,7 @@ export function initBaza() {
 function ocistiPrikaz() {
   aktivnaTabela = null;
   $("#tabele-lista").innerHTML = `<div class="prazno-malo">Klikni „Učitaj bazu" da vidiš tabele.</div>`;
-  $("#tabela-detalj").innerHTML = `<div class="prazno-malo">Izaberi tabelu sa leve strane da vidiš njen sadržaj.</div>`;
+  $("#tabela-detalj").innerHTML = `<div class="prazno-malo">Klikni na tabelu sa leve strane da vidiš njen sadržaj.</div>`;
   $("#baza-info").textContent = "";
 }
 

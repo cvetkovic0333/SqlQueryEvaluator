@@ -21,7 +21,7 @@
       "label": "watch-api",
       "command": "dotnet",
       "type": "process",
-      "args": ["watch", "run", "--project", "${workspaceFolder}/src/SqlQueryEvaluator.Api/SqlQueryEvaluator.Api.csproj"],
+      "args": ["watch", "run", "--project", "${workspaceFolder}/backend/SqlQueryEvaluator.Api/SqlQueryEvaluator.Api.csproj"],
       "problemMatcher": "$msCompile"
     }
   ]

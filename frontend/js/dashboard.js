@@ -153,6 +153,7 @@ function grafModeli(p) {
 
 function grafTezina(p) {
   const nazivi = { lak: "Lak", srednji: "Srednji", tezak: "Težak" };
+  if (!p.tezine || p.tezine.length === 0) return;
   grafikoni.tezina = new Chart($("#graf-tezina"), {
     type: "bar",
     data: {
@@ -169,24 +170,27 @@ function grafTezina(p) {
 }
 
 function grafJezik(p) {
+  // Kartica se sklanja ako je meren samo jedan jezik — grafikon poređenja
+  // sa jednim stupcem ništa ne poredi, a prazan drugi stubac bi navodio na
+  // pogrešan zaključak.
+  const kartica = $("#graf-jezik").closest(".kartica");
+  if (!p.jezici || p.jezici.length < 2) {
+    kartica.classList.add("hidden");
+    return;
+  }
+  kartica.classList.remove("hidden");
+
+  const nazivJezika = { sr: "Srpski", en: "Engleski" };
   grafikoni.jezik = new Chart($("#graf-jezik"), {
     type: "bar",
     data: {
       labels: p.poJeziku.map((m) => m.naziv),
-      datasets: [
-        {
-          label: "Srpski",
-          data: p.poJeziku.map((m) => m.vrednosti[0]),
-          backgroundColor: "#a78bfa",
-          borderRadius: 5,
-        },
-        {
-          label: "Engleski",
-          data: p.poJeziku.map((m) => m.vrednosti[1]),
-          backgroundColor: "#2dd4bf",
-          borderRadius: 5,
-        },
-      ],
+      datasets: p.jezici.map((j, i) => ({
+        label: nazivJezika[j] || j,
+        data: p.poJeziku.map((m) => m.vrednosti[i]),
+        backgroundColor: i === 0 ? "#a78bfa" : "#2dd4bf",
+        borderRadius: 5,
+      })),
     },
     options: { ...osnovneOpcije, scales: { y: osaProcenat, x: { grid: { display: false } } } },
   });

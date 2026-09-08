@@ -55,8 +55,17 @@ public static class BenchmarkEndpoints
                 .Select(p => p.Key)
                 .FirstOrDefault();
 
-            var tezine = new[] { "lak", "srednji", "tezak" };
-            var jezici = new[] { "sr", "en" };
+            var tezine = new[] { "lak", "srednji", "tezak" }
+                .Where(t => redovi.Any(r => r.Tezina == t))
+                .ToArray();
+
+            // Prikazuju se samo jezici koji su STVARNO mereni. Ako se test
+            // pusti samo na srpskom, engleski bi inače izašao kao 0% i
+            // izgledalo bi da modeli na engleskom potpuno padaju — a nisu
+            // ni pitani.
+            var jezici = new[] { "sr", "en" }
+                .Where(j => redovi.Any(r => r.Jezik == j))
+                .ToArray();
 
             return Results.Ok(new
             {

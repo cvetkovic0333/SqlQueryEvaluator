@@ -292,14 +292,21 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .tabela .istaknut { background: var(--akcenat-slab); }
 
 /* ------------------------------------------------------------ tab: baza */
-.baza-raspored { display: grid; grid-template-columns: 320px 1fr; gap: 18px; align-items: start; }
+.baza-raspored { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+
+/* Desna kolona drži upit, generisani SQL, rezultat i pregled tabele —
+   sve jedno ispod drugog, da se pitanje kuca uz vidljive tabele levo. */
+.baza-desno { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.baza-desno > .tabela-detalj { min-width: 0; }
+.baza-desno > .tabela-detalj .kartica { margin-bottom: 0; }
 
 .tabele-lista {
   background: var(--povrsina);
   border: 1px solid var(--ivica);
   border-radius: var(--radijus);
   padding: 10px;
-  max-height: 72vh; overflow-y: auto;
+  max-height: 60vh; overflow-y: auto;
+  position: sticky; top: 96px;
 }
 
 .tabela-stavka {

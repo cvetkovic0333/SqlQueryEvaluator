@@ -25,13 +25,18 @@ Aplikacija pokriva ceo tok rada:
 ## Struktura
 
 ```
+frontend/                       korisnički interfejs: HTML, CSS, JS moduli, Chart.js
+backend/SqlQueryEvaluator.Api/        Minimal API; servira i frontend, isti proces
+backend/SqlQueryEvaluator.Core/       logika: provajderi modela, text-to-SQL, evaluacija
+backend/SqlQueryEvaluator.Benchmark/  offline runner koji meri sve modele
 Baza/                           SQL skripte za obe demo baze + rola za čitanje
-benchmark/testset.json          45 test zadataka (lak/srednji/težak) × srpski/engleski
-src/SqlQueryEvaluator.Core/     logika: provajderi modela, text-to-SQL, evaluacija
-src/SqlQueryEvaluator.Api/      Minimal API + wwwroot (frontend)
-src/SqlQueryEvaluator.Benchmark/  offline runner koji testira sve modele
+benchmark/testset.json          45 test zadataka (lak/srednji/težak)
 tests/SqlQueryEvaluator.Tests/  xUnit testovi
 ```
+
+Front i back su razdvojeni u zasebne foldere, ali se i dalje pokreću jednom
+komandom — API servira `frontend/` iz istog procesa, pa nema drugog servera
+ni CORS-a.
 
 ## Demo baze
 
@@ -53,9 +58,9 @@ oblik, pa ih pokriva jedna klasa; Gemini ima svoju. Novi model se dodaje **jedni
 unosom u `Models` nizu** u `appsettings.json`, bez pisanja koda:
 
 ```json
-{ "Id": "groq:llama-3.3-70b", "Kind": "openai",
+{ "Id": "groq:gpt-oss-120b", "Kind": "openai",
   "BaseUrl": "https://api.groq.com/openai/v1",
-  "Model": "llama-3.3-70b-versatile", "ApiKeyRef": "Groq" }
+  "Model": "openai/gpt-oss-120b", "ApiKeyRef": "Groq" }
 ```
 
 > Ponuda besplatnih modela se menja. Ako neki naziv prestane da radi,
@@ -96,7 +101,7 @@ powershell -File Baza/pokreni_sve.ps1
 **2. Lozinke i API ključevi** — u `user-secrets`, nikada u `appsettings.json` (repo je javan):
 
 ```bash
-dotnet user-secrets set "ApiKeys:Groq" "gsk_..." --project src/SqlQueryEvaluator.Api
+dotnet user-secrets set "ApiKeys:Groq" "gsk_..." --project backend/SqlQueryEvaluator.Api
 ```
 
 Isto za `ApiKeys:Gemini`, `ApiKeys:OpenRouter`, `ApiKeys:Mistral`, kao i za
@@ -106,13 +111,13 @@ Alternativa su promenljive okruženja: `GROQ_API_KEY`, `GEMINI_API_KEY`, …
 **3. Provera da ključevi rade** — pre nego što se potroši kvota na pun test:
 
 ```bash
-dotnet run --project src/SqlQueryEvaluator.Benchmark -- --dry-run
+dotnet run --project backend/SqlQueryEvaluator.Benchmark -- --dry-run
 ```
 
 **4. Test modela** — probno na 5 zadataka, pa pun run:
 
 ```bash
-dotnet run --project src/SqlQueryEvaluator.Benchmark -- --limit 5
+dotnet run --project backend/SqlQueryEvaluator.Benchmark -- --limit 5
 ```
 
 Pun test je 45 zadataka × 2 jezika × broj modela. Prekinut test se nastavlja sa
@@ -121,27 +126,27 @@ Pun test je 45 zadataka × 2 jezika × broj modela. Prekinut test se nastavlja s
 **5. Aplikacija:**
 
 ```bash
-dotnet run --project src/SqlQueryEvaluator.Api
+dotnet run --project backend/SqlQueryEvaluator.Api
 ```
 
 U VS Code-u: **F5** → „API (web + frontend)". Jedan proces diže i API i frontend.
 
 ## Aplikacija
 
-Četiri sekcije:
+Tri sekcije:
 
-1. **Rezultati modela** — grafikoni iz stvarnih rezultata testa: tačnost po modelu,
-   po težini zadatka, srpski naspram engleskog, brzina naspram tačnosti, i poređenje
-   ocene sudije sa objektivnom tačnošću. Pobednik testa je istaknut — to je
-   obrazloženje zašto je izabran baš taj model. Dok test nije pokrenut, prikazuje se
-   uputstvo, a ne izmišljeni brojevi.
-2. **Baza** — učitavanje šeme, lista tabela sa brojem redova, tipovi kolona,
-   primarni i strani ključevi, pregled sadržaja. Čekiranjem tabela bira se kontekst
-   koji ide modelu.
-3. **Upit** — pitanje na srpskom ili engleskom → generisani SQL → ocena sudije sa
-   obrazloženjem → izvršavanje. Upit ocenjen sa 4 ili 5 ide odmah; ispod toga
-   aplikacija traži izričitu potvrdu.
-4. **Istorija** — prethodni upiti sa ocenom i statusom; klik vraća upit u editor.
+1. **Baza i upit** — sa leve strane tabele sa brojem redova, tipovima kolona i
+   ključevima; sa desne polje za pitanje. Namerno na istom ekranu: pitanje se
+   kuca dok se vidi šta baza sadrži. Čekiranjem tabela bira se kontekst koji ide
+   modelu. Posle prevoda se prikazuje SQL, ocena sudije sa obrazloženjem, pa
+   rezultat izvršavanja. Upit ocenjen sa 4 ili 5 ide odmah; ispod toga aplikacija
+   traži izričitu potvrdu.
+2. **Rezultati modela** — grafikoni iz stvarnih rezultata testa: tačnost po modelu,
+   po težini zadatka, brzina naspram tačnosti, i poređenje ocene sudije sa
+   objektivnom tačnošću. Pobednik je istaknut — to je obrazloženje zašto je izabran
+   baš taj model. Prikazuju se samo jezici koji su stvarno mereni. Dok test nije
+   pokrenut, prikazuje se uputstvo, a ne izmišljeni brojevi.
+3. **Istorija** — prethodni upiti sa ocenom i statusom; klik vraća upit u editor.
 
 ## Bezbednost izvršavanja
 
@@ -164,18 +169,6 @@ Provereno na živoj bazi — `DELETE`, `DROP TABLE`, `pg_sleep`, pristup šemi
 dotnet test
 ```
 
-60 testova: sanitizer (uključujući pokušaje zaobilaženja), poređenje rezultata,
+64 testa: sanitizer (uključujući pokušaje zaobilaženja), poređenje rezultata,
 Cohen's kappa, parsiranje odgovora sudije, širenje konteksta preko stranih ključeva
 i ispravnost samog test seta.
-
-## Bezbednost izvršavanja
-
-SQL koji je generisao model izvršava se u dva sloja zaštite:
-
-1. **baza** — rola `sqleval_citanje` sme samo `SELECT` nad demo šemama, radne
-   podatke aplikacije uopšte ne vidi, a upit joj se prekida posle 5 sekundi
-2. **aplikacija** — sanitizer: samo jedan `SELECT`/`WITH` statement, blacklist
-   ključnih reči, read-only transakcija koja se uvek završava `ROLLBACK`-om
-
-Provereno na živoj bazi — `DELETE`, `DROP TABLE` i pristup šemi `aplikacija`
-odbijaju se već na nivou baze, i pre nego što sanitizer dođe na red.
