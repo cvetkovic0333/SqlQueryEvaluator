@@ -100,19 +100,46 @@ async function prevedi() {
 
   $("#kartica-rezultat").classList.add("hidden");
 
-  try {
-    const odgovor = await api.prevedi({
-      pitanje,
-      jezik: s.jezik,
-      baza: s.aktivnaBaza,
-      tabele: [...s.izabraneTabele],
-      modelId: s.aktivniModel,
-    });
+  // Modeli koji su danas iscrpeli kvotu se preskaču, po redosledu tačnosti
+  // iz merenja. Bez ovoga korisnik dobije grešku i mora sam da bira drugi
+  // model, iako aplikacija već zna koji je sledeći najbolji.
+  const preskoceni = [];
 
-    postavi({ poslednjiPrevod: odgovor });
-    prikaziPrevod(odgovor);
-    status.textContent = "";
-    osveziIstoriju();
+  try {
+    for (const modelId of redosledPokusaja()) {
+      try {
+        const odgovor = await api.prevedi({
+          pitanje,
+          jezik: s.jezik,
+          baza: s.aktivnaBaza,
+          tabele: [...s.izabraneTabele],
+          modelId,
+        });
+
+        if (modelId !== s.aktivniModel) {
+          postavi({ aktivniModel: modelId });
+          $("#upit-model").value = modelId;
+          poruka(`${imeModela(preskoceni[0])} je iscrpeo dnevnu kvotu — prešao sam na ${imeModela(modelId)}.`);
+        }
+
+        postavi({ poslednjiPrevod: odgovor });
+        prikaziPrevod(odgovor);
+        status.textContent = "";
+        osveziIstoriju();
+        return;
+      } catch (e) {
+        if (!e.kvotaIscrpljena) throw e;
+        preskoceni.push(modelId);
+        status.textContent = `${imeModela(modelId)} nema kvote — probam sledeći model…`;
+      }
+    }
+
+    // Nijedan model nije uspeo.
+    status.className = "upit-status greska";
+    status.textContent = preskoceni.length > 1
+      ? `Svi modeli su iscrpeli dnevnu kvotu (${preskoceni.map(imeModela).join(", ")}). Pokušaj sutra.`
+      : "Model je iscrpeo dnevnu kvotu i nema zamene sa podešenim ključem.";
+    $("#kartica-sql").classList.add("hidden");
   } catch (e) {
     status.className = "upit-status greska";
     status.textContent = e.message;
@@ -120,6 +147,18 @@ async function prevedi() {
   } finally {
     postaviUcitavanje(dugme, false, "Prevedi u SQL");
   }
+}
+
+/** Izabrani model prvi, pa ostali po tačnosti iz merenja. */
+function redosledPokusaja() {
+  const s = daj();
+  const rang = s.rangLista?.length ? s.rangLista : s.modeli.filter((m) => m.imaKljuc).map((m) => m.id);
+  const izabrani = s.aktivniModel;
+  return izabrani ? [izabrani, ...rang.filter((id) => id !== izabrani)] : rang;
+}
+
+function imeModela(id) {
+  return daj().modeli.find((m) => m.id === id)?.naziv ?? id;
 }
 
 function prikaziPrevod(o) {

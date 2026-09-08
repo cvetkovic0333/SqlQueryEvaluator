@@ -34,7 +34,22 @@ var frontend = NadjiFrontend(builder.Environment.ContentRootPath);
 var fajlovi = new PhysicalFileProvider(frontend);
 
 app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fajlovi });
-app.UseStaticFiles(new StaticFileOptions { FileProvider = fajlovi });
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = fajlovi,
+
+    // U razvoju se JS i CSS menjaju stalno, a browser ih kešira i servira
+    // staru verziju — izmena izgleda kao da nije primenjena dok se ne uradi
+    // Ctrl+F5. Zato se u Development režimu keširanje isključuje.
+    OnPrepareResponse = kontekst =>
+    {
+        if (kontekst.Context.RequestServices
+                .GetRequiredService<IWebHostEnvironment>().IsDevelopment())
+        {
+            kontekst.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        }
+    }
+});
 
 // Frontend (wwwroot) se servira iz istog procesa kao i API — nema CORS-a
 // ni drugog dev servera; jedan `dotnet run` diže i UI i API.

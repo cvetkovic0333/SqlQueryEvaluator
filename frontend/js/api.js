@@ -19,6 +19,7 @@ async function zahtev(putanja, opcije = {}) {
     const poruka = telo?.greska || telo?.detail || telo?.title || `HTTP ${odgovor.status}`;
     const g = new Error(poruka);
     g.telo = telo;
+    g.kvotaIscrpljena = telo?.kvotaIscrpljena === true;
     g.status = odgovor.status;
     throw g;
   }
