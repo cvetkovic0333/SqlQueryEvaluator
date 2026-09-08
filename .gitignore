@@ -22,9 +22,10 @@ secrets.json
 *.env
 .env
 
-# ---- Rezultati benchmarka (generisu se) ----
-benchmark/results/*
-!benchmark/results/.gitkeep
+# ---- Rezultati benchmarka ----
+# Ovo NISU obicni generisani fajlovi nego eksperimentalni podaci rada:
+# svaki je rezultat stvarnih poziva ka modelima i potrosene dnevne kvote,
+# pa se cuvaju u repou zajedno sa kodom koji ih je proizveo.
 
 # ---- Prateca dokumentacija, ne ide u repo ----
 *.pdf
