@@ -30,8 +30,9 @@ export const api = {
   modeli: () => zahtev("/api/modeli"),
   baze: () => zahtev("/api/baze"),
   sema: (baza) => zahtev(`/api/sema/${encodeURIComponent(baza)}`),
-  pregled: (baza, tabela, limit = 50) =>
-    zahtev(`/api/sema/${encodeURIComponent(baza)}/${encodeURIComponent(tabela)}/pregled?limit=${limit}`),
+  pregled: (baza, tabela, limit = 50, offset = 0) =>
+    zahtev(`/api/sema/${encodeURIComponent(baza)}/${encodeURIComponent(tabela)}/pregled`
+           + `?limit=${limit}&offset=${offset}`),
 
   prevedi: (telo) => zahtev("/api/prevedi", { method: "POST", body: JSON.stringify(telo) }),
   izvrsi: (telo) => zahtev("/api/izvrsi", { method: "POST", body: JSON.stringify(telo) }),

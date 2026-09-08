@@ -298,7 +298,9 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
    sve jedno ispod drugog, da se pitanje kuca uz vidljive tabele levo. */
 .baza-desno { display: flex; flex-direction: column; gap: 0; min-width: 0; }
 .baza-desno > .tabela-detalj { min-width: 0; }
-.baza-desno > .tabela-detalj .kartica { margin-bottom: 0; }
+.baza-desno > .tabela-detalj .kartica { margin-bottom: 18px; }
+.baza-desno > .tabela-detalj .kartica:last-child { margin-bottom: 0; }
+.tabela-okvir { max-height: 60vh; overflow-y: auto; }
 
 .tabele-lista {
   background: var(--povrsina);
@@ -315,12 +317,20 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
   border-radius: var(--radijus-malo);
   cursor: pointer;
   transition: background .12s;
+  user-select: none;
+}
+.tabela-stavka:has(input:checked) {
+  background: var(--akcenat-slab);
+  box-shadow: inset 2px 0 0 var(--akcenat);
 }
 .tabela-stavka:hover { background: var(--povrsina-2); }
 .tabela-stavka.is-active { background: var(--akcenat-slab); }
 .tabela-stavka input { accent-color: var(--akcenat); cursor: pointer; width: 15px; height: 15px; }
 .tabela-stavka-ime { font-family: var(--mono); font-size: 13px; flex: 1; }
 .tabela-stavka-broj { color: var(--tekst-3); font-size: 11.5px; font-family: var(--mono); }
+
+.ucitaj-jos { display: flex; justify-content: center; padding-top: 12px; }
+.ucitaj-jos .kartica-opis { color: var(--tekst-3); font-size: 12.5px; }
 
 .kolone-lista { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
 .kolona-znacka {

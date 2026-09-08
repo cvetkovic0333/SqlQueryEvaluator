@@ -14,10 +14,14 @@ async function start() {
   initUpit();
   initIstorija();
 
-  await Promise.all([ucitajBaze(), ucitajModele()]);
+  await ucitajBaze();
+  await ucitajModele();
 
   osveziInfoIzabranih();
   nacrtajPredloge();
+
+  // Tabele se prikazuju odmah po otvaranju, bez klika na dugme.
+  ucitajSemu();
   ucitajDashboard();
 }
 
@@ -39,7 +43,12 @@ async function ucitajBaze() {
 async function ucitajModele() {
   try {
     const podaci = await api.modeli();
-    postavi({ modeli: podaci.modeli, aktivniModel: podaci.podrazumevaniModel });
+
+    // U padajucem meniju se podrazumevano nudi model koji je NAJBOLJE prosao
+    // test, a ne onaj upisan u konfiguraciji — merenje je merodavnije od
+    // podesavanja koje je moglo da zastari.
+    const pobednik = await najboljiModel(podaci);
+    postavi({ modeli: podaci.modeli, aktivniModel: pobednik });
 
     const podrazumevani = podaci.modeli.find((m) => m.id === podaci.podrazumevaniModel);
     const sudija = podaci.modeli.find((m) => m.id === podaci.modelSudije);
@@ -51,8 +60,8 @@ async function ucitajModele() {
     // izabere — bolje nego da poziv pukne tek kada korisnik pritisne dugme.
     $("#upit-model").innerHTML = podaci.modeli.map((m) => `
       <option value="${escapeHtml(m.id)}" ${m.imaKljuc ? "" : "disabled"}
-              ${m.id === podaci.podrazumevaniModel ? "selected" : ""}>
-        ${escapeHtml(m.naziv)}${m.imaKljuc ? "" : " — nema API ključ"}
+              ${m.id === pobednik ? "selected" : ""}>
+        ${escapeHtml(m.naziv)}${m.imaKljuc ? "" : " — nema API ključ"}${m.id === pobednik ? " ★" : ""}
       </option>`).join("");
 
     if (!podaci.spremno) {
@@ -85,6 +94,24 @@ function upozoriNaKljuceve() {
         i <code>ApiKeys:Mistral</code>. Posle podešavanja restartuj aplikaciju.
       </div>
     </div>`);
+}
+
+/**
+ * Model sa najboljom tacnoscu iz poslednjeg testa, pod uslovom da ima
+ * podesen API kljuc. Ako testa jos nema, vraca se na podesavanje.
+ */
+async function najboljiModel(podaci) {
+  try {
+    const b = await api.benchmark();
+    if (b.imaPodataka && Array.isArray(b.modeli)) {
+      const najbolji = b.modeli.find((m) =>
+        podaci.modeli.some((x) => x.id === m.modelId && x.imaKljuc));
+      if (najbolji) return najbolji.modelId;
+    }
+  } catch {
+    // dashboard nije dostupan — nije razlog da tab sa upitom ne radi
+  }
+  return podaci.podrazumevaniModel;
 }
 
 function priPromeniTaba(tab) {
