@@ -16,10 +16,11 @@ public sealed record PrevodRezultat(
     bool Bezbedan,
     string? RazlogOdbijanja,
     OcenaSudije? Ocena,
-    string? Greska)
+    string? Greska,
+    bool KvotaIscrpljena = false)
 {
-    public static PrevodRezultat Neuspeh(string greska, string modelId) =>
-        new(false, "", "", modelId, 0, 0, 0, false, null, null, greska);
+    public static PrevodRezultat Neuspeh(string greska, string modelId, bool kvotaIscrpljena = false) =>
+        new(false, "", "", modelId, 0, 0, 0, false, null, null, greska, kvotaIscrpljena);
 }
 
 /// <summary>
@@ -71,7 +72,9 @@ public sealed class TextToSqlService(
         }
         catch (LlmException ex)
         {
-            return PrevodRezultat.Neuspeh(ex.Message, model);
+            // Sirova poruka provajdera je stranica JSON-a i korisniku ne znači
+            // ništa. Prevodi se u rečenicu koja kaže šta da uradi.
+            return PrevodRezultat.Neuspeh(ObjasniGresku(ex, model), model, ex.RateLimit);
         }
 
         var provera = SqlSanitizer.Proveri(sirov);
@@ -89,5 +92,34 @@ public sealed class TextToSqlService(
 
         return new PrevodRezultat(true, provera.Sql, sirov, model, trajanje, ulazni, izlazni,
             true, null, ocena, null);
+    }
+
+    /// <summary>
+    /// Poruke provajdera su tehničke i na engleskom. Ovde se svode na
+    /// rečenicu koja kaže šta se desilo i šta korisnik može da uradi —
+    /// najčešće da izabere drugi model iz padajućeg menija.
+    /// </summary>
+    private string ObjasniGresku(LlmException ex, string modelId)
+    {
+        var naziv = fabrika.DostupniModeli.FirstOrDefault(m => m.Id == modelId)?.PrikaznoIme ?? modelId;
+
+        if (ex.RateLimit)
+        {
+            var kada = ex.CekajSekundi is { } s and > 0
+                ? s >= 120 ? $" Pokušaj ponovo za {s / 60} min." : $" Pokušaj ponovo za {s} s."
+                : "";
+
+            return $"Model „{naziv}” je iscrpeo kvotu besplatnog naloga.{kada} " +
+                   "Izaberi drugi model iz padajućeg menija — ostali imaju zasebne kvote.";
+        }
+
+        if (ex.StatusKod is 401 or 403)
+            return $"API ključ za model „{naziv}” nije prihvaćen. Proveri ga u appsettings.Development.json.";
+
+        if (ex.StatusKod == 404)
+            return $"Model „{naziv}” više ne postoji kod provajdera. Provajderi povlače modele — " +
+                   "proveri tačan naziv sa: dotnet run --project backend/SqlQueryEvaluator.Benchmark -- --dry-run";
+
+        return $"Model „{naziv}” nije odgovorio: {ex.Message}";
     }
 }

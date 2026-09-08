@@ -7,6 +7,7 @@ const stanje = {
   sema: null,
   izabraneTabele: new Set(),
   modeli: [],
+  rangLista: [],   // id-jevi modela poredjani po tacnosti iz merenja
   aktivniModel: null,
   jezik: "sr",
   poslednjiPrevod: null,

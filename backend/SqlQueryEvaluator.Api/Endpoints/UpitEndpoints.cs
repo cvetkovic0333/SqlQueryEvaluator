@@ -37,8 +37,15 @@ public static class UpitEndpoints
             var rezultat = await servis.PreveediAsync(
                 zahtev.Pitanje, zahtev.Baza, zahtev.Tabele, zahtev.ModelId, oceniSudijom: true, ct);
 
+            // Kvota se vraca kao poseban podatak, ne samo kao tekst greske,
+            // da bi interfejs mogao sam da predje na sledeci najbolji model.
             if (!rezultat.Uspesno)
-                return Results.Problem(rezultat.Greska, statusCode: 502);
+                return Results.Json(new
+                {
+                    greska = rezultat.Greska,
+                    kvotaIscrpljena = rezultat.KvotaIscrpljena,
+                    modelId = rezultat.ModelId
+                }, statusCode: 502);
 
             var upitId = await istorija.DodajAsync(new IstorijaUpisa
             {

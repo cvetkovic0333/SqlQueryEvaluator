@@ -47,8 +47,9 @@ async function ucitajModele() {
     // U padajucem meniju se podrazumevano nudi model koji je NAJBOLJE prosao
     // test, a ne onaj upisan u konfiguraciji — merenje je merodavnije od
     // podesavanja koje je moglo da zastari.
-    const pobednik = await najboljiModel(podaci);
-    postavi({ modeli: podaci.modeli, aktivniModel: pobednik });
+    const rang = await rangModela(podaci);
+    const pobednik = rang[0] ?? podaci.podrazumevaniModel;
+    postavi({ modeli: podaci.modeli, rangLista: rang, aktivniModel: pobednik });
 
     const podrazumevani = podaci.modeli.find((m) => m.id === podaci.podrazumevaniModel);
     const sudija = podaci.modeli.find((m) => m.id === podaci.modelSudije);
@@ -97,21 +98,29 @@ function upozoriNaKljuceve() {
 }
 
 /**
- * Model sa najboljom tacnoscu iz poslednjeg testa, pod uslovom da ima
- * podesen API kljuc. Ako testa jos nema, vraca se na podesavanje.
+ * Modeli poredjani po tacnosti iz poslednjeg merenja, od najboljeg naniže,
+ * i to samo oni koji imaju podesen API kljuc. Prvi je podrazumevani, a
+ * ostatak sluzi kao redosled zamene kada model iscrpi dnevnu kvotu.
  */
-async function najboljiModel(podaci) {
+async function rangModela(podaci) {
+  const upotrebljivi = podaci.modeli.filter((m) => m.imaKljuc).map((m) => m.id);
+
   try {
     const b = await api.benchmark();
     if (b.imaPodataka && Array.isArray(b.modeli)) {
-      const najbolji = b.modeli.find((m) =>
-        podaci.modeli.some((x) => x.id === m.modelId && x.imaKljuc));
-      if (najbolji) return najbolji.modelId;
+      const izmereni = b.modeli.map((m) => m.modelId).filter((id) => upotrebljivi.includes(id));
+      // Neizmereni modeli idu na kraj — ne znamo im tacnost, ali rade.
+      const ostali = upotrebljivi.filter((id) => !izmereni.includes(id));
+      if (izmereni.length > 0) return [...izmereni, ...ostali];
     }
   } catch {
     // dashboard nije dostupan — nije razlog da tab sa upitom ne radi
   }
-  return podaci.podrazumevaniModel;
+
+  const podrazumevani = podaci.podrazumevaniModel;
+  return upotrebljivi.includes(podrazumevani)
+    ? [podrazumevani, ...upotrebljivi.filter((id) => id !== podrazumevani)]
+    : upotrebljivi;
 }
 
 function priPromeniTaba(tab) {
