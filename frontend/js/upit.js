@@ -5,41 +5,6 @@ import { $, $$, escapeHtml, nacrtajTabelu, poruka, trajanje, brojFormat, postavi
 import { daj, postavi } from "./stanje.js";
 import { osveziIstoriju } from "./istorija.js";
 
-const PREDLOZI = {
-  prodavnica: {
-    sr: [
-      "Prikaži 10 kupaca sa najvećom potrošnjom",
-      "Koji proizvodi nikada nisu naručeni?",
-      "Ukupna zarada po kategoriji u 2024. godini",
-      "Proizvodi sa prosečnom ocenom ispod 3",
-      "Koliko porudžbina je otkazano po gradovima?",
-    ],
-    en: [
-      "Show the 10 customers with the highest spending",
-      "Which products have never been ordered?",
-      "Total revenue per category in 2024",
-      "Products with an average rating below 3",
-      "How many orders were cancelled per city?",
-    ],
-  },
-  fakultet: {
-    sr: [
-      "Koji smer ima najbolji prosek ocena?",
-      "Studenti koji nisu položili nijedan ispit",
-      "Prosečna ocena po predmetu u januarskom roku",
-      "Koliko studenata je upisano po godinama?",
-      "Profesori sa najviše predmeta",
-    ],
-    en: [
-      "Which study program has the best average grade?",
-      "Students who have not passed a single exam",
-      "Average grade per course in the January exam period",
-      "How many students enrolled per year?",
-      "Professors teaching the most courses",
-    ],
-  },
-};
-
 export function initUpit() {
   $("#dugme-prevedi").addEventListener("click", prevedi);
   $("#dugme-izvrsi").addEventListener("click", izvrsi);
@@ -53,7 +18,6 @@ export function initUpit() {
       $$("#prekidac-jezik .prekidac-opcija")
         .forEach((d) => d.classList.toggle("is-active", d === dugme));
       postavi({ jezik: dugme.dataset.jezik });
-      nacrtajPredloge();
     });
   });
 
@@ -70,22 +34,6 @@ export function initUpit() {
     }
   });
 
-  nacrtajPredloge();
-}
-
-export function nacrtajPredloge() {
-  const s = daj();
-  const lista = PREDLOZI[s.aktivnaBaza]?.[s.jezik] || [];
-  $("#predlozi").innerHTML = lista
-    .map((p) => `<button class="predlog">${escapeHtml(p)}</button>`)
-    .join("");
-
-  $$("#predlozi .predlog").forEach((el) => {
-    el.addEventListener("click", () => {
-      $("#upit-tekst").value = el.textContent;
-      $("#upit-tekst").focus();
-    });
-  });
 }
 
 async function prevedi() {
@@ -328,7 +276,6 @@ export function ucitajUEditor(stavka) {
   $$("#prekidac-jezik .prekidac-opcija").forEach((d) =>
     d.classList.toggle("is-active", d.dataset.jezik === stavka.jezik));
   postavi({ jezik: stavka.jezik });
-  nacrtajPredloge();
 
   $$(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.tab === "baza"));
   $$(".panel").forEach((p) => p.classList.toggle("is-active", p.id === "tab-baza"));
