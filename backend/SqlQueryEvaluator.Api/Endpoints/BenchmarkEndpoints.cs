@@ -125,6 +125,52 @@ public static class BenchmarkEndpoints
             });
         });
 
+        // Izvoz tabele metrika u PDF — prilog za pisani deo rada.
+        app.MapGet("/api/benchmark/izvoz.pdf", async (
+            int? pokretanje,
+            BenchmarkRepository repo,
+            ILlmProviderFactory fabrika,
+            NajboljiModel najbolji,
+            CancellationToken ct) =>
+        {
+            var pokretanja = await repo.SvaPokretanjaAsync(ct);
+            var izabrano = pokretanje ?? pokretanja.FirstOrDefault()?.PokretanjeId;
+            if (izabrano is null)
+                return Results.BadRequest(new { greska = "Nema nijednog pokretanja testa." });
+
+            var redovi = await repo.RezultatiAsync(izabrano, ct);
+            if (redovi.Count == 0)
+                return Results.BadRequest(new { greska = "Pokretanje nema nijedan rezultat." });
+
+            var info = pokretanja.First(x => x.PokretanjeId == izabrano);
+            var nazivi = fabrika.DostupniModeli.ToDictionary(m => m.Id, m => m.PrikaznoIme);
+
+            double PoTezini(string model, string tezina)
+            {
+                var deo = redovi.Where(r => r.ModelId == model && r.Tezina == tezina).ToList();
+                return deo.Count == 0 ? 0 : MetricsCalculator.ZaGrupu(tezina, deo).ExecutionAccuracy;
+            }
+
+            var poModelu = MetricsCalculator.PoModelu(redovi)
+                .OrderByDescending(x => x.Value.ExecutionAccuracy)
+                .Select(x => new RedMetrike(
+                    nazivi.GetValueOrDefault(x.Key, x.Key),
+                    x.Value.Broj, x.Value.ExecutionAccuracy, x.Value.ValidSqlRate,
+                    x.Value.ProsecnaOcenaSudije, x.Value.ProsecnoTrajanjeMs, x.Value.ProsecnoTokena,
+                    PoTezini(x.Key, "lak"), PoTezini(x.Key, "srednji"), PoTezini(x.Key, "tezak")))
+                .ToList();
+
+            var pobednikId = await najbolji.OdrediAsync(ct);
+            var pdf = PdfMetrike.Napravi(new PodaciMetrika(
+                info.PokretanjeId, info.Pocetak, info.ModelSudije, redovi.Count,
+                nazivi.GetValueOrDefault(pobednikId, pobednikId),
+                poModelu,
+                MetricsCalculator.IzracunajSlaganje(redovi)));
+
+            return Results.File(pdf, "application/pdf",
+                $"rezultati-testiranja-{info.Pocetak:yyyyMMdd}.pdf");
+        });
+
         app.MapGet("/api/benchmark/izvoz.csv", async (
             int? pokretanje, BenchmarkRepository repo, CancellationToken ct) =>
         {
