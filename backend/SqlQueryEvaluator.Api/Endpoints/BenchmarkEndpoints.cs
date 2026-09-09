@@ -19,6 +19,7 @@ public static class BenchmarkEndpoints
             int? pokretanje,
             BenchmarkRepository repo,
             ILlmProviderFactory fabrika,
+            NajboljiModel najbolji,
             IOptions<TextToSqlOptions> opcije,
             CancellationToken ct) =>
         {
@@ -74,7 +75,7 @@ public static class BenchmarkEndpoints
                 izabranoPokretanje = izabrano,
                 pobednik,
                 pobednikNaziv = pobednik is null ? null : Naziv(pobednik),
-                podesenModel = opcije.Value.DefaultModelId,
+                podesenModel = await najbolji.OdrediAsync(ct),
                 ukupnoPoziva = redovi.Count,
 
                 modeli = poModelu.OrderByDescending(p => p.Value.ExecutionAccuracy).Select(p => new
