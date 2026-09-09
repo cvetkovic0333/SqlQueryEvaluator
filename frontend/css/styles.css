@@ -288,6 +288,10 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .tabela tbody tr:hover { background: rgba(91,140,255,.05); }
 .tabela tbody tr:last-child td { border-bottom: 0; }
 .tabela .broj { text-align: right; font-family: var(--mono); font-size: 12.5px; }
+
+/* Zaglavlje brojčane kolone mora da prati poravnanje vrednosti ispod sebe.
+   Sa naslovom levo a brojevima desno oko ne povezuje kolonu sa nazivom. */
+.tabela th.broj { text-align: right; font-family: var(--font); font-size: 13px; }
 .tabela .null { color: var(--tekst-3); font-style: italic; }
 .tabela .istaknut { background: var(--akcenat-slab); }
 
