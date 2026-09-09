@@ -5,7 +5,7 @@ import { $, initTabovi, escapeHtml, poruka } from "./ui.js";
 import { postavi, daj } from "./stanje.js";
 import { ucitajDashboard } from "./dashboard.js";
 import { initBaza, ucitajSemu, osveziInfoIzabranih } from "./baza.js";
-import { initUpit, nacrtajPredloge } from "./upit.js";
+import { initUpit } from "./upit.js";
 import { initIstorija, osveziIstoriju } from "./istorija.js";
 
 async function start() {
@@ -18,7 +18,6 @@ async function start() {
   await ucitajModele();
 
   osveziInfoIzabranih();
-  nacrtajPredloge();
 
   // Tabele se prikazuju odmah po otvaranju, bez klika na dugme.
   ucitajSemu();
@@ -118,7 +117,6 @@ function priPromeniTaba(tab) {
   if (tab === "rezultati") ucitajDashboard();
   if (tab === "istorija") osveziIstoriju();
   if (tab === "baza" && !s.sema) ucitajSemu();
-  if (tab === "baza") nacrtajPredloge();
 }
 
 start();
