@@ -73,6 +73,7 @@ public static class ServiceCollectionExtensions
         servisi.AddSingleton<LlmJudge>();
         servisi.AddSingleton<TextToSqlService>();
         servisi.AddSingleton<ExecutionAccuracyEvaluator>();
+        servisi.AddSingleton<NajboljiModel>();
         servisi.AddSingleton<IstorijaRepository>();
         servisi.AddSingleton<BenchmarkRepository>();
 

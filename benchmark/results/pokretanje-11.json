@@ -1,6 +1,6 @@
 {
   "pokretanjeId": 11,
-  "datum": "2026-09-08T21:53:40.4039687+02:00",
+  "datum": "2026-09-09T19:24:35.5257855+02:00",
   "poModelu": {
     "groq:gpt-oss-20b": {
       "Kljuc": "groq:gpt-oss-20b",
@@ -13,12 +13,12 @@
     },
     "gemini:3.5-flash": {
       "Kljuc": "gemini:3.5-flash",
-      "Broj": 20,
-      "ValidSqlRate": 95,
-      "ExecutionAccuracy": 75,
-      "ProsecnaOcenaSudije": 4.55,
-      "ProsecnoTrajanjeMs": 11617,
-      "ProsecnoTokena": 1766
+      "Broj": 36,
+      "ValidSqlRate": 83.3,
+      "ExecutionAccuracy": 52.8,
+      "ProsecnaOcenaSudije": 3.83,
+      "ProsecnoTrajanjeMs": 13389,
+      "ProsecnoTokena": 1777
     },
     "groq:qwen3-8-27b": {
       "Kljuc": "groq:qwen3-8-27b",
@@ -37,54 +37,63 @@
       "ProsecnaOcenaSudije": 3.76,
       "ProsecnoTrajanjeMs": 2786,
       "ProsecnoTokena": 2800
+    },
+    "groq:gpt-oss-120b": {
+      "Kljuc": "groq:gpt-oss-120b",
+      "Broj": 45,
+      "ValidSqlRate": 97.8,
+      "ExecutionAccuracy": 44.4,
+      "ProsecnaOcenaSudije": 4.38,
+      "ProsecnoTrajanjeMs": 1160,
+      "ProsecnoTokena": 1829
     }
   },
   "poTezini": {
     "lak": {
       "Kljuc": "lak",
-      "Broj": 60,
-      "ValidSqlRate": 98.3,
-      "ExecutionAccuracy": 90,
-      "ProsecnaOcenaSudije": 4.85,
-      "ProsecnoTrajanjeMs": 3486,
-      "ProsecnoTokena": 1839
+      "Broj": 75,
+      "ValidSqlRate": 98.7,
+      "ExecutionAccuracy": 88,
+      "ProsecnaOcenaSudije": 4.84,
+      "ProsecnoTrajanjeMs": 2916,
+      "ProsecnoTokena": 1804
     },
     "srednji": {
       "Kljuc": "srednji",
-      "Broj": 50,
-      "ValidSqlRate": 68,
+      "Broj": 75,
+      "ValidSqlRate": 73.3,
       "ExecutionAccuracy": 32,
-      "ProsecnaOcenaSudije": 3.98,
-      "ProsecnoTrajanjeMs": 2677,
-      "ProsecnoTokena": 2127
+      "ProsecnaOcenaSudije": 3.85,
+      "ProsecnoTrajanjeMs": 4172,
+      "ProsecnoTokena": 2015
     },
     "tezak": {
       "Kljuc": "tezak",
-      "Broj": 45,
-      "ValidSqlRate": 57.8,
-      "ExecutionAccuracy": 8.9,
-      "ProsecnaOcenaSudije": 3.7,
-      "ProsecnoTrajanjeMs": 1630,
-      "ProsecnoTokena": 2273
+      "Broj": 66,
+      "ValidSqlRate": 68.2,
+      "ExecutionAccuracy": 12.1,
+      "ProsecnaOcenaSudije": 3.77,
+      "ProsecnoTrajanjeMs": 2828,
+      "ProsecnoTokena": 2175
     }
   },
   "poJeziku": {
     "sr": {
       "Kljuc": "sr",
-      "Broj": 155,
-      "ValidSqlRate": 76.8,
-      "ExecutionAccuracy": 47.7,
-      "ProsecnaOcenaSudije": 4.24,
-      "ProsecnoTrajanjeMs": 2686,
-      "ProsecnoTokena": 2058
+      "Broj": 216,
+      "ValidSqlRate": 80.6,
+      "ExecutionAccuracy": 45.4,
+      "ProsecnaOcenaSudije": 4.17,
+      "ProsecnoTrajanjeMs": 3325,
+      "ProsecnoTokena": 1990
     }
   },
   "slaganjeSudije": {
-    "Slaganje": 64.5,
-    "Kappa": 0.308,
-    "TacnoPozitivno": 73,
-    "TacnoNegativno": 25,
-    "LaznoPozitivno": 54,
+    "Slaganje": 62.4,
+    "Kappa": 0.291,
+    "TacnoPozitivno": 97,
+    "TacnoNegativno": 36,
+    "LaznoPozitivno": 80,
     "LaznoNegativno": 0
   }
 }
