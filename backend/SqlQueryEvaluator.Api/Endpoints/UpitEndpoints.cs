@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using SqlQueryEvaluator.Core.Configuration;
+using SqlQueryEvaluator.Core.Evaluation;
 using SqlQueryEvaluator.Core.Persistence;
 using SqlQueryEvaluator.Core.TextToSql;
 
@@ -32,6 +33,7 @@ public static class UpitEndpoints
             PrevodZahtev zahtev,
             TextToSqlService servis,
             IstorijaRepository istorija,
+            NajboljiModel najbolji,
             IOptions<TextToSqlOptions> opcije,
             CancellationToken ct) =>
         {
@@ -41,8 +43,15 @@ public static class UpitEndpoints
             if (!opcije.Value.Baze.Any(b => b.Equals(zahtev.Baza, StringComparison.OrdinalIgnoreCase)))
                 return Results.BadRequest(new { greska = $"Nepoznata baza: {zahtev.Baza}" });
 
+            // Ako klijent nije naveo model, uzima se pobednik poslednjeg
+            // merenja — a ne vrednost rucno upisana u konfiguraciju, koja
+            // zastari cim stigne novo merenje.
+            var model = string.IsNullOrWhiteSpace(zahtev.ModelId)
+                ? await najbolji.OdrediAsync(ct)
+                : zahtev.ModelId;
+
             var rezultat = await servis.PreveediAsync(
-                zahtev.Pitanje, zahtev.Baza, zahtev.Tabele, zahtev.ModelId, oceniSudijom: true, ct);
+                zahtev.Pitanje, zahtev.Baza, zahtev.Tabele, model, oceniSudijom: true, ct);
 
             // Kvota se vraca kao poseban podatak, ne samo kao tekst greske,
             // da bi interfejs mogao sam da predje na sledeci najbolji model.
