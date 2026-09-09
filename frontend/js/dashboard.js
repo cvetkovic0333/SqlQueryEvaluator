@@ -266,8 +266,10 @@ function prikaziSlaganje(p) {
 
 function prikaziTabelu(p) {
   const glava = `<thead><tr>
-      <th>Model</th><th>Tačnost</th><th>Ispravan SQL</th>
-      <th>Ocena sudije</th><th>Trajanje</th><th>Tokena</th><th>Upita</th>
+      <th>Model</th>
+      <th class="broj">Tačnost</th><th class="broj">Ispravan SQL</th>
+      <th class="broj">Ocena sudije</th><th class="broj">Trajanje</th>
+      <th class="broj">Tokena</th><th class="broj">Upita</th>
     </tr></thead>`;
 
   const telo = p.modeli.map((m) => `

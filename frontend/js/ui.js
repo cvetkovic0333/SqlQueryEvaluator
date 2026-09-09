@@ -71,7 +71,15 @@ export function nacrtajTabelu(element, kolone, redovi) {
     return;
   }
 
-  const glava = `<thead><tr>${kolone.map((k) => `<th>${escapeHtml(k)}</th>`).join("")}</tr></thead>`;
+  // Kolona se smatra brojčanom ako su joj sve popunjene vrednosti brojevi.
+  // Tada i zaglavlje ide desno, da naslov stoji tačno iznad svojih brojeva.
+  const brojcana = kolone.map((_, i) => {
+    const vrednosti = redovi.map((r) => r[i]).filter((v) => v !== null && v !== undefined);
+    return vrednosti.length > 0 && vrednosti.every((v) => typeof v === "number");
+  });
+
+  const glava = `<thead><tr>${kolone.map((k, i) =>
+    `<th${brojcana[i] ? ' class="broj"' : ""}>${escapeHtml(k)}</th>`).join("")}</tr></thead>`;
 
   const telo = redovi.length === 0
     ? `<tr><td colspan="${kolone.length}" class="null">Nema rezultata.</td></tr>`
