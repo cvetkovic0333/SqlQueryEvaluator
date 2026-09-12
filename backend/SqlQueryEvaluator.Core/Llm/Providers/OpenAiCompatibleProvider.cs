@@ -70,10 +70,16 @@ public sealed class OpenAiCompatibleProvider(
             using var dok = JsonDocument.Parse(sadrzaj);
             var koren = dok.RootElement;
 
-            var tekst = koren.GetProperty("choices")[0]
-                             .GetProperty("message")
+            var izbor = koren.GetProperty("choices")[0];
+            var tekst = izbor.GetProperty("message")
                              .GetProperty("content")
                              .GetString() ?? "";
+
+            // "length" znači da je model stao na granici max_tokens. Kod
+            // GPT-OSS i Qwen3 u tu granicu ulazi i razmišljanje.
+            var presecen = izbor.TryGetProperty("finish_reason", out var razlog)
+                && razlog.ValueKind == JsonValueKind.String
+                && razlog.GetString() == "length";
 
             var ulazni = 0;
             var izlazni = 0;
@@ -83,7 +89,7 @@ public sealed class OpenAiCompatibleProvider(
                 if (usage.TryGetProperty("completion_tokens", out var ctk)) izlazni = ctk.GetInt32();
             }
 
-            return new LlmResponse(tekst.Trim(), ulazni, izlazni, sat.ElapsedMilliseconds, Opis.Id);
+            return new LlmResponse(tekst.Trim(), ulazni, izlazni, sat.ElapsedMilliseconds, Opis.Id, presecen);
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
         {

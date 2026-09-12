@@ -56,6 +56,7 @@ public sealed class TextToSqlService(
         string sirov;
         long trajanje;
         int ulazni, izlazni;
+        bool presecen;
         try
         {
             var provajder = fabrika.Kreiraj(model);
@@ -69,6 +70,7 @@ public sealed class TextToSqlService(
             trajanje = odgovor.TrajanjeMs;
             ulazni = odgovor.UlazniTokeni;
             izlazni = odgovor.IzlazniTokeni;
+            presecen = odgovor.Presecen;
         }
         catch (LlmException ex)
         {
@@ -77,7 +79,7 @@ public sealed class TextToSqlService(
             return PrevodRezultat.Neuspeh(ObjasniGresku(ex, model), model, ex.RateLimit);
         }
 
-        var provera = SqlSanitizer.Proveri(sirov);
+        var provera = SqlSanitizer.Proveri(sirov, presecen);
         if (!provera.Prihvacen)
         {
             return new PrevodRezultat(true, "", sirov, model, trajanje, ulazni, izlazni,
