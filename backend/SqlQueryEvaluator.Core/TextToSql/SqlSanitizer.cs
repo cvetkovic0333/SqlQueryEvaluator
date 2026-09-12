@@ -50,6 +50,17 @@ public static class SqlSanitizer
     private static readonly Regex RazmisljanjeNezatvoreno =
         new(@"<think>.*$", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
+    /// <summary>
+    /// Odgovor presečen na granici tokena odbija se pre ikakve provere. Čak i
+    /// kada odsečeni komad slučajno prolazi (npr. upit presečen pre ORDER BY),
+    /// to nije upit koji je model nameravao da vrati.
+    /// </summary>
+    public static SanitizerResult Proveri(string? sirovSql, bool presecen) =>
+        presecen
+            ? SanitizerResult.Odbijen(
+                "Model je dostigao granicu izlaznih tokena pre nego što je završio odgovor.")
+            : Proveri(sirovSql);
+
     public static SanitizerResult Proveri(string? sirovSql)
     {
         if (string.IsNullOrWhiteSpace(sirovSql))

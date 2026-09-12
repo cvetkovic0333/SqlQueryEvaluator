@@ -188,7 +188,7 @@ public sealed class BenchmarkRunner(
             PromptBuilder.KorisnickiPrompt(sema, pitanje),
             Temperature: 0, MaxTokens: provajder.Opis.MaxTokens), ct);
 
-        var provera = SqlSanitizer.Proveri(odgovor.Text);
+        var provera = SqlSanitizer.Proveri(odgovor.Text, odgovor.Presecen);
 
         var sqlIspravan = false;
         var rezultatIsti = false;

@@ -9,12 +9,18 @@ public sealed record LlmRequest(
     int MaxTokens = 1200,
     bool JsonMode = false);
 
+/// <param name="Presecen">
+/// Model je stao na granici izlaznih tokena, pa tekst nije ceo odgovor.
+/// Kod modela koji "razmišljaju" to se dešava i kada je vidljivi tekst
+/// kratak — razmišljanje troši istu granicu.
+/// </param>
 public sealed record LlmResponse(
     string Text,
     int UlazniTokeni,
     int IzlazniTokeni,
     long TrajanjeMs,
-    string ModelId);
+    string ModelId,
+    bool Presecen = false);
 
 /// <summary>
 /// Greška u komunikaciji sa modelom. <see cref="RateLimit"/> se posebno
