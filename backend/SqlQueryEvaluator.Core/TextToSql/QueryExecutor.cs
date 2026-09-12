@@ -1,5 +1,6 @@
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.Extensions.Options;
 using Npgsql;
 using SqlQueryEvaluator.Core.Configuration;
@@ -43,7 +44,12 @@ public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOption
             // Traži se jedan red više od granice, da bismo znali da je odsečeno.
             var omotan = $"SELECT * FROM (\n{sql}\n) AS _rezultat LIMIT {maxRedova + 1}";
 
+            var kaoTekst = await NumericKoloneAsync(omotan, veza, transakcija, ct);
+
             await using var komanda = new NpgsqlCommand(omotan, veza, transakcija);
+            if (kaoTekst.Any(k => k))
+                komanda.UnknownResultTypeList = kaoTekst;
+
             await using var citac = await komanda.ExecuteReaderAsync(ct);
 
             var rezultat = new QueryResult();
@@ -60,7 +66,9 @@ public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOption
 
                 var red = new List<object?>(citac.FieldCount);
                 for (var i = 0; i < citac.FieldCount; i++)
-                    red.Add(citac.IsDBNull(i) ? null : Normalizuj(citac.GetValue(i)));
+                    red.Add(citac.IsDBNull(i) ? null
+                        : kaoTekst[i] ? ProcitajNumeric(citac.GetString(i))
+                        : Normalizuj(citac.GetValue(i)));
 
                 rezultat.Redovi.Add(red);
             }
@@ -81,6 +89,30 @@ public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOption
             return QueryResult.Neuspesno(ex.Message);
         }
     }
+
+    /// <summary>
+    /// PostgreSQL numeric može da ima mnogo više cifara od .NET decimal-a —
+    /// npr. proizvod više kolona podeljen sa 100.0 lako dobije 20+ decimala.
+    /// Tada GetValue puca iako je upit potpuno ispravan, pa bi model bio
+    /// kažnjen za ograničenje čitača. Takva vrednost se čita kao double;
+    /// poređenje rezultata ionako zaokružuje na 4 decimale.
+    /// </summary>
+    private static async Task<bool[]> NumericKoloneAsync(
+        string sql, NpgsqlConnection veza, NpgsqlTransaction transakcija, CancellationToken ct)
+    {
+        await using var opis = new NpgsqlCommand(sql, veza, transakcija);
+        await using var citac = await opis.ExecuteReaderAsync(CommandBehavior.SchemaOnly, ct);
+
+        var rezultat = new bool[citac.FieldCount];
+        for (var i = 0; i < citac.FieldCount; i++)
+            rezultat[i] = citac.GetDataTypeName(i).StartsWith("numeric", StringComparison.Ordinal);
+        return rezultat;
+    }
+
+    private static object ProcitajNumeric(string tekst) =>
+        decimal.TryParse(tekst, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? d
+        : double.TryParse(tekst, NumberStyles.Float, CultureInfo.InvariantCulture, out var x) && double.IsFinite(x) ? x
+        : tekst;
 
     /// <summary>
     /// Vrednosti se pripremaju za JSON. Datumi idu kao ISO tekst da bi

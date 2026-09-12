@@ -97,12 +97,20 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
     private static string NormalizujRed(List<object?> red) =>
         string.Join("␟", red.Select(NormalizujVrednost));
 
+    /// <summary>
+    /// Brojevi se ispisuju formatom "0.####" — bez pratećih nula. decimal
+    /// pamti broj decimala, pa bi inače 12.30 (numeric(10,2) iz gold upita)
+    /// i 12.3000 (AVG bez zaokruživanja) bili različit tekst iako su isti
+    /// broj, a isto i 42 (bigint) naspram 42.00 (numeric).
+    /// </summary>
+    private const string FormatBroja = "0.####";
+
     internal static string NormalizujVrednost(object? v) => v switch
     {
         null => "␀NULL",
-        decimal d => Math.Round(d, 4).ToString(CultureInfo.InvariantCulture),
-        double d => Math.Round(d, 4).ToString(CultureInfo.InvariantCulture),
-        float f => Math.Round((double)f, 4).ToString(CultureInfo.InvariantCulture),
+        decimal d => Math.Round(d, 4).ToString(FormatBroja, CultureInfo.InvariantCulture),
+        double d => Math.Round(d, 4).ToString(FormatBroja, CultureInfo.InvariantCulture),
+        float f => Math.Round((double)f, 4).ToString(FormatBroja, CultureInfo.InvariantCulture),
         bool b => b ? "true" : "false",
         string s => s.Trim(),
         _ => Convert.ToString(v, CultureInfo.InvariantCulture)?.Trim() ?? ""
