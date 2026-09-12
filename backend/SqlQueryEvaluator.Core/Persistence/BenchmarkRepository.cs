@@ -22,6 +22,18 @@ public sealed class BenchmarkRezultatUpis
     public int IzlazniTokeni { get; init; }
 }
 
+/// <summary>Sačuvan odgovor modela, za ponovno poređenje bez novog poziva.</summary>
+public sealed class SacuvanUpit
+{
+    public long RezultatId { get; init; }
+    public string ZadatakId { get; init; } = "";
+    public string ModelId { get; init; } = "";
+    public string? GenerisaniSql { get; init; }
+    public bool SqlIspravan { get; init; }
+    public bool RezultatIsti { get; init; }
+    public string? GreskaIzvrsavanja { get; init; }
+}
+
 public sealed class PokretanjeInfo
 {
     public int PokretanjeId { get; init; }
@@ -84,6 +96,39 @@ public sealed class BenchmarkRepository(AplikacijaDataSource izvor)
                 ulazni_tokeni = EXCLUDED.ulazni_tokeni,
                 izlazni_tokeni = EXCLUDED.izlazni_tokeni
             """, r);
+    }
+
+    public async Task<IReadOnlyList<SacuvanUpit>> SacuvaniUpitiAsync(int pokretanjeId, CancellationToken ct = default)
+    {
+        await using var veza = await izvor.Izvor.OpenConnectionAsync(ct);
+        var redovi = await veza.QueryAsync<SacuvanUpit>(
+            """
+            SELECT rezultat_id AS RezultatId, zadatak_id AS ZadatakId, model_id AS ModelId,
+                   generisani_sql AS GenerisaniSql, sql_ispravan AS SqlIspravan,
+                   rezultat_isti AS RezultatIsti, greska_izvrsavanja AS GreskaIzvrsavanja
+              FROM aplikacija.benchmark_rezultat
+             WHERE pokretanje_id = @pokretanjeId
+             ORDER BY model_id, zadatak_id, jezik
+            """, new { pokretanjeId });
+        return redovi.ToList();
+    }
+
+    /// <summary>
+    /// Menja samo ishod poređenja. Odgovor modela i ocena sudije ostaju
+    /// netaknuti — oni ne zavise od pravila poređenja.
+    /// </summary>
+    public async Task AzurirajPoredjenjeAsync(
+        long rezultatId, bool sqlIspravan, bool rezultatIsti, string? greska, CancellationToken ct = default)
+    {
+        await using var veza = await izvor.Izvor.OpenConnectionAsync(ct);
+        await veza.ExecuteAsync(
+            """
+            UPDATE aplikacija.benchmark_rezultat
+               SET sql_ispravan = @sqlIspravan,
+                   rezultat_isti = @rezultatIsti,
+                   greska_izvrsavanja = @greska
+             WHERE rezultat_id = @rezultatId
+            """, new { rezultatId, sqlIspravan, rezultatIsti, greska });
     }
 
     public async Task<HashSet<string>> VecUradjeniAsync(int pokretanjeId, CancellationToken ct = default)

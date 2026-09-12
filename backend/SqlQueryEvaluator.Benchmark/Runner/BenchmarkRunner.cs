@@ -45,6 +45,9 @@ public sealed class BenchmarkRunner(
         if (arg.SamoProvera)
             return await ProveriKljuceveAsync(ct);
 
+        if (arg.PonovoUporedi is { } zaPoredjenje)
+            return await PonovoUporediAsync(zaPoredjenje, arg.TestSetPutanja, ct);
+
         var testSet = await TestSet.UcitajAsync(arg.TestSetPutanja, ct);
         var zadaci = Filtriraj(testSet.Zadaci, arg);
 
@@ -229,6 +232,64 @@ public sealed class BenchmarkRunner(
             UlazniTokeni = odgovor.UlazniTokeni,
             IzlazniTokeni = odgovor.IzlazniTokeni
         };
+    }
+
+    /// <summary>
+    /// Ponovo poredi sačuvane upite sa gold rezultatom, bez ijednog poziva
+    /// modelu. Koristi se kada se ispravi pravilo poređenja: odgovor modela
+    /// se nije promenio, pa nema razloga da se ponovo troši kvota — menja se
+    /// samo presuda da li je taj odgovor tačan.
+    ///
+    /// Preskaču se odgovori koje je sanitizer odbio (npr. presečeni): oni
+    /// nikada nisu ni stigli do baze, pa nema šta da se poredi.
+    /// </summary>
+    private async Task<int> PonovoUporediAsync(int pokretanjeId, string testSetPutanja, CancellationToken ct)
+    {
+        var testSet = await TestSet.UcitajAsync(testSetPutanja, ct);
+        var zadaci = testSet.Zadaci.ToDictionary(z => z.Id);
+        var upiti = await repo.SacuvaniUpitiAsync(pokretanjeId, ct);
+
+        Console.WriteLine($"Ponovno poređenje pokretanja #{pokretanjeId}: {upiti.Count} sačuvanih odgovora");
+        Console.WriteLine();
+
+        int provereno = 0, promenjeno = 0, preskoceno = 0;
+
+        foreach (var u in upiti)
+        {
+            // Odgovor je prošao sanitizer ako je izvršen (ispravan/tačan) ili
+            // ako je pukao tek u bazi. Sve ostalo je odbila provera.
+            var prosaoProveru = u.RezultatIsti || u.SqlIspravan
+                || (u.GreskaIzvrsavanja?.StartsWith("Generisani SQL se nije izvršio", StringComparison.Ordinal) ?? false);
+
+            if (!prosaoProveru || string.IsNullOrWhiteSpace(u.GenerisaniSql)
+                || !zadaci.TryGetValue(u.ZadatakId, out var zadatak))
+            {
+                preskoceno++;
+                continue;
+            }
+
+            var ishod = await poredjenje.UporediAsync(zadatak.GoldSql, u.GenerisaniSql, ct);
+            var sqlIspravan = !ishod.Objasnjenje.StartsWith("Generisani SQL se nije izvršio", StringComparison.Ordinal);
+            var greska = ishod.Poklapa ? null : ishod.Objasnjenje;
+            provereno++;
+
+            if (ishod.Poklapa != u.RezultatIsti || sqlIspravan != u.SqlIspravan)
+            {
+                promenjeno++;
+                Console.WriteLine($"  {u.ModelId,-22} {u.ZadatakId,-6} {Znak(u.RezultatIsti, u.SqlIspravan)} → " +
+                                  $"{Znak(ishod.Poklapa, sqlIspravan)}  {greska ?? "rezultat se poklapa"}");
+            }
+
+            await repo.AzurirajPoredjenjeAsync(u.RezultatId, sqlIspravan, ishod.Poklapa, greska, ct);
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"Provereno: {provereno}, promenjeno: {promenjeno}, preskočeno (odbio sanitizer): {preskoceno}");
+
+        await IzvestajAsync(pokretanjeId, ct);
+        return 0;
+
+        static string Znak(bool tacno, bool ispravan) => tacno ? "✓" : ispravan ? "≈" : "✗";
     }
 
     /// <summary>Provera da li svaki konfigurisan model ima ključ i odgovara na trivijalan poziv.</summary>
