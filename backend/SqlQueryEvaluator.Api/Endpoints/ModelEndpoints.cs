@@ -9,9 +9,6 @@ public static class ModelEndpoints
 {
     public static void MapModelEndpoints(this WebApplication app)
     {
-        // Lista modela iz registra, sa podatkom da li im je ključ podešen.
-        // Interfejs na osnovu toga jasno kaže šta fali, umesto da poziv
-        // pukne tek kada korisnik pritisne "Prevedi".
         app.MapGet("/api/modeli", async (
             ILlmProviderFactory fabrika,
             NajboljiModel najbolji,

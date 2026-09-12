@@ -23,13 +23,6 @@ public sealed record PrevodRezultat(
         new(false, "", "", modelId, 0, 0, 0, false, null, null, greska, kvotaIscrpljena);
 }
 
-/// <summary>
-/// Spaja ceo tok koji je tražen u opisu rada:
-/// pitanje → model → SQL → sanitizer → sudija oceni upit.
-///
-/// Izvršavanje je namerno ODVOJEN korak (<see cref="QueryExecutor"/>) — upit
-/// se šalje na izvršenje tek pošto je ocenjen, kao izričita akcija.
-/// </summary>
 public sealed class TextToSqlService(
     ILlmProviderFactory fabrika,
     SchemaIntrospector introspektor,
@@ -74,8 +67,6 @@ public sealed class TextToSqlService(
         }
         catch (LlmException ex)
         {
-            // Sirova poruka provajdera je stranica JSON-a i korisniku ne znači
-            // ništa. Prevodi se u rečenicu koja kaže šta da uradi.
             return PrevodRezultat.Neuspeh(ObjasniGresku(ex, model), model, ex.RateLimit);
         }
 
@@ -96,11 +87,6 @@ public sealed class TextToSqlService(
             true, null, ocena, null);
     }
 
-    /// <summary>
-    /// Poruke provajdera su tehničke i na engleskom. Ovde se svode na
-    /// rečenicu koja kaže šta se desilo i šta korisnik može da uradi —
-    /// najčešće da izabere drugi model iz padajućeg menija.
-    /// </summary>
     private string ObjasniGresku(LlmException ex, string modelId)
     {
         var naziv = fabrika.DostupniModeli.FirstOrDefault(m => m.Id == modelId)?.PrikaznoIme ?? modelId;

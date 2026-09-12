@@ -20,8 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Interne metode (Uporedi, ImaOrderBy, Rasclani) su vidljive testovima:
-         to je logika vredna testiranja, ali ne i deo javnog API-ja biblioteke. -->
     <InternalsVisibleTo Include="SqlQueryEvaluator.Tests" />
   </ItemGroup>
 

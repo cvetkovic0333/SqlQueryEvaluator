@@ -1,6 +1,5 @@
 namespace SqlQueryEvaluator.Core.Evaluation;
 
-/// <summary>Jedan red rezultata benchmarka, u obliku pogodnom za računanje metrika.</summary>
 public sealed record RezultatZaMetriku(
     string ModelId,
     string Tezina,
@@ -30,13 +29,6 @@ public sealed record SlaganjeSudije(
     int LaznoPozitivno,
     int LaznoNegativno);
 
-/// <summary>
-/// Računa metrike iz rezultata benchmarka.
-///
-/// Pored uobičajenih (tačnost, brzina), računa i SLAGANJE SUDIJE sa
-/// execution accuracy. To je zasebna celina rada: pokazuje koliko se
-/// LLM-as-a-Judge uopšte sme koristiti kao merilo, a ne samo da se koristi.
-/// </summary>
 public static class MetricsCalculator
 {
     public static Metrike ZaGrupu(string kljuc, IReadOnlyCollection<RezultatZaMetriku> redovi)
@@ -65,14 +57,6 @@ public static class MetricsCalculator
     public static Dictionary<string, Metrike> PoJeziku(IEnumerable<RezultatZaMetriku> redovi) =>
         redovi.GroupBy(r => r.Jezik).ToDictionary(g => g.Key, g => ZaGrupu(g.Key, g.ToList()));
 
-    /// <summary>
-    /// Poredi binarnu ocenu sudije ("da li je upit tačan") sa objektivnom
-    /// merom (da li se rezultat poklapa sa gold rezultatom).
-    ///
-    /// Kappa se računa jer sam procenat slaganja vara: ako je 90% upita
-    /// tačno, sudija koji uvek kaže "tačno" ima 90% slaganja a nula
-    /// vrednosti. Kappa oduzima slaganje koje bi nastalo slučajno.
-    /// </summary>
     public static SlaganjeSudije IzracunajSlaganje(IEnumerable<RezultatZaMetriku> redovi)
     {
         var uzorak = redovi.Where(r => r.SudijaTacan.HasValue).ToList();
@@ -87,7 +71,6 @@ public static class MetricsCalculator
         var n = (double)uzorak.Count;
         var posmatrano = (tp + tn) / n;
 
-        // Očekivano slaganje pod pretpostavkom nezavisnosti dve ocene.
         var sudijaDa = (tp + fp) / n;
         var sudijaNe = (tn + fn) / n;
         var stvarnoDa = (tp + fn) / n;
@@ -102,7 +85,6 @@ public static class MetricsCalculator
             tp, tn, fp, fn);
     }
 
-    /// <summary>Tumačenje kappa vrednosti po Landis i Koch skali — za tekst rada.</summary>
     public static string OpisKappe(double kappa) => kappa switch
     {
         < 0.00 => "gore od slučajnog pogađanja",

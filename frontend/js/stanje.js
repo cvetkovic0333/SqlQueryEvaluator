@@ -1,13 +1,10 @@
-// Deljeno stanje aplikacije. Bez framework-a, ali i bez razbacanih globalnih
-// promenljivih: moduli se pretplate na promenu i sami se osveže.
-
 const stanje = {
   baze: [],
   aktivnaBaza: null,
   sema: null,
   izabraneTabele: new Set(),
   modeli: [],
-  rangLista: [],   // id-jevi modela poredjani po tacnosti iz merenja
+  rangLista: [],
   aktivniModel: null,
   jezik: "sr",
   poslednjiPrevod: null,

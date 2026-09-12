@@ -3,12 +3,6 @@ using SqlQueryEvaluator.Core.Models;
 
 namespace SqlQueryEvaluator.Core.TextToSql;
 
-/// <summary>
-/// Gradi prompt za prevođenje pitanja u SQL.
-///
-/// Sistemski prompt je NAMERNO identičan za sve modele — da poređenje u radu
-/// bude pošteno. Jedina razlika između dva poziva je model koji ga prima.
-/// </summary>
 public static class PromptBuilder
 {
     public const string SistemskiPrompt = """
@@ -35,11 +29,6 @@ public static class PromptBuilder
           and casing varies.
         """;
 
-    /// <summary>
-    /// Renderuje šemu u DDL-nalik oblik. Ako je korisnik izabrao samo neke
-    /// tabele, dodaju se i tabele povezane stranim ključem — bez njih model
-    /// nema kako da sastavi JOIN i zadatak je unapred izgubljen.
-    /// </summary>
     public static string OpisSeme(DatabaseSchema sema, IReadOnlyCollection<string>? izabraneTabele = null)
     {
         var vidljive = OdrediVidljiveTabele(sema, izabraneTabele);
@@ -100,10 +89,6 @@ public static class PromptBuilder
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Izabrane tabele + sve tabele do kojih vodi strani ključ (u oba smera),
-    /// jedan nivo dubine. Ako korisnik nije izabrao ništa, vraća se cela šema.
-    /// </summary>
     private static List<TableInfo> OdrediVidljiveTabele(
         DatabaseSchema sema, IReadOnlyCollection<string>? izabrane)
     {

@@ -26,9 +26,6 @@ public static class UpitEndpoints
 {
     public static void MapUpitEndpoints(this WebApplication app)
     {
-        // Korak 1: pitanje -> SQL -> sanitizer -> ocena sudije.
-        // Upit se NE izvršava ovde; izvršavanje je izričit, poseban korak,
-        // tačno kako je traženo u opisu rada.
         app.MapPost("/api/prevedi", async (
             PrevodZahtev zahtev,
             TextToSqlService servis,
@@ -43,9 +40,6 @@ public static class UpitEndpoints
             if (!opcije.Value.Baze.Any(b => b.Equals(zahtev.Baza, StringComparison.OrdinalIgnoreCase)))
                 return Results.BadRequest(new { greska = $"Nepoznata baza: {zahtev.Baza}" });
 
-            // Ako klijent nije naveo model, uzima se pobednik poslednjeg
-            // merenja — a ne vrednost rucno upisana u konfiguraciju, koja
-            // zastari cim stigne novo merenje.
             var model = string.IsNullOrWhiteSpace(zahtev.ModelId)
                 ? await najbolji.OdrediAsync(ct)
                 : zahtev.ModelId;
@@ -53,8 +47,6 @@ public static class UpitEndpoints
             var rezultat = await servis.PreveediAsync(
                 zahtev.Pitanje, zahtev.Baza, zahtev.Tabele, model, oceniSudijom: true, ct);
 
-            // Kvota se vraca kao poseban podatak, ne samo kao tekst greske,
-            // da bi interfejs mogao sam da predje na sledeci najbolji model.
             if (!rezultat.Uspesno)
                 return Results.Json(new
                 {
@@ -97,15 +89,10 @@ public static class UpitEndpoints
                     obrazlozenje = rezultat.Ocena.Obrazlozenje,
                     modelSudije = rezultat.Ocena.ModelSudije
                 },
-                // Upit ocenjen kao dobar sme odmah na izvršenje; ispod praga
-                // interfejs traži izričitu potvrdu.
                 smeOdmahDaSeIzvrsi = rezultat.Bezbedan && ocena >= opcije.Value.MinimalnaOcenaZaIzvrsavanje
             });
         });
 
-        // Korak 2: izvršavanje. Sanitizer se pušta ponovo — telo zahteva
-        // dolazi od klijenta i ne sme se verovati da je isto ono što je
-        // prošlo proveru u koraku 1.
         app.MapPost("/api/izvrsi", async (
             IzvrsiZahtev zahtev,
             QueryExecutor izvrsilac,
@@ -141,9 +128,6 @@ public static class UpitEndpoints
             });
         });
 
-        // Izvoz rezultata u PDF. Upit se izvrsava PONOVO umesto da se primi
-        // gotova tabela od klijenta — dokument tako uvek prikazuje ono sto
-        // je stvarno u bazi, a ne ono sto je neko poslao serveru.
         app.MapPost("/api/izvoz/pdf", async (
             PdfZahtev zahtev,
             QueryExecutor izvrsilac,

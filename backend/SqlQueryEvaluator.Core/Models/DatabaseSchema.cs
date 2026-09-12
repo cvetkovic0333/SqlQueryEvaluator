@@ -1,10 +1,5 @@
 namespace SqlQueryEvaluator.Core.Models;
 
-/// <summary>
-/// Opis jedne šeme pročitan iz information_schema. Isti model koristi i
-/// korisnički interfejs (prikaz "učitane baze") i graditelj prompta —
-/// jedan izvor istine, pa UI i model uvek vide isto.
-/// </summary>
 public sealed class DatabaseSchema
 {
     public required string Naziv { get; init; }

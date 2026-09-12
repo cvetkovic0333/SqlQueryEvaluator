@@ -1,6 +1,3 @@
-// Tanak omotač oko fetch-a ka /api/*. Sve greške se svode na Error sa
-// porukom koju server pošalje, da bi interfejs uvek imao šta da prikaže.
-
 async function zahtev(putanja, opcije = {}) {
   const odgovor = await fetch(putanja, {
     headers: { "Content-Type": "application/json" },
@@ -43,7 +40,6 @@ export const api = {
 
   benchmark: () => zahtev("/api/benchmark/pregled"),
 
-  // Vraća PDF kao binarni sadržaj, ne JSON — zato zaobilazi zahtev().
   pdf: async (telo) => {
     const odgovor = await fetch("/api/izvoz/pdf", {
       method: "POST",
@@ -53,7 +49,7 @@ export const api = {
 
     if (!odgovor.ok) {
       let poruka = `HTTP ${odgovor.status}`;
-      try { poruka = (await odgovor.json()).greska ?? poruka; } catch { /* telo nije JSON */ }
+      try { poruka = (await odgovor.json()).greska ?? poruka; } catch { }
       throw new Error(poruka);
     }
 

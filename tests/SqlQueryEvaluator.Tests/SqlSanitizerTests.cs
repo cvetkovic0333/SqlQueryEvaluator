@@ -2,10 +2,6 @@ using SqlQueryEvaluator.Core.TextToSql;
 
 namespace SqlQueryEvaluator.Tests;
 
-/// <summary>
-/// Sanitizer je drugi sloj zaštite pri izvršavanju SQL-a koji je generisao
-/// model, pa je i najvažniji za testiranje.
-/// </summary>
 public class SqlSanitizerTests
 {
     [Theory]
@@ -50,8 +46,6 @@ public class SqlSanitizerTests
     [Fact]
     public void Nalazi_opasnu_rec_sakrivenu_iza_linijskog_komentara()
     {
-        // Model ume da vrati upit sa komentarom u kome je druga komanda.
-        // Posle uklanjanja komentara mora da ostane samo bezopasan deo.
         var r = SqlSanitizer.Proveri("SELECT 1\n--\nDROP TABLE prodavnica.kupci");
         Assert.False(r.Prihvacen);
     }
@@ -90,8 +84,6 @@ public class SqlSanitizerTests
     [Fact]
     public void Ne_zabunjuje_ga_kljucna_rec_unutar_string_literala()
     {
-        // Ovo je legitiman upit: reč "otkazana" je PODATAK, ne komanda.
-        // Bez maskiranja string literala provera bi ga pogrešno odbila.
         var r = SqlSanitizer.Proveri(
             "SELECT count(*) FROM prodavnica.porudzbine WHERE status = 'otkazana'");
         Assert.True(r.Prihvacen, r.Razlog);
@@ -107,7 +99,6 @@ public class SqlSanitizerTests
     [Fact]
     public void Ne_zabunjuje_ga_offset()
     {
-        // "offset" sadrži "set", ali granica reči sprečava lažno podudaranje.
         var r = SqlSanitizer.Proveri("SELECT ime FROM prodavnica.kupci LIMIT 10 OFFSET 20");
         Assert.True(r.Prihvacen, r.Razlog);
     }
@@ -133,9 +124,6 @@ public class SqlSanitizerTests
     [Fact]
     public void Uklanja_think_blok_koji_modeli_koji_razmisljaju_dodaju()
     {
-        // Qwen3 i slični ispisuju tok razmišljanja pre odgovora. Bez
-        // uklanjanja bloka upit počinje tekstom i biva odbijen, iako je
-        // model ispod dao potpuno ispravan SQL.
         var odgovor = """
             <think>
             Provericu prvo tabelu kupci, pa cu spojiti sa porudzbinama...
@@ -152,7 +140,6 @@ public class SqlSanitizerTests
     [Fact]
     public void Odbija_odgovor_koji_je_samo_nedovrseno_razmisljanje()
     {
-        // Model je dostigao granicu tokena usred razmišljanja — nema SQL-a.
         var r = SqlSanitizer.Proveri("<think>Hajde da razmislim o ovom upitu");
         Assert.False(r.Prihvacen);
         Assert.Contains("razmišljanja", r.Razlog!);

@@ -13,18 +13,6 @@ public sealed record OcenaSudije(int Ocena, bool Tacan, string Obrazlozenje, str
         new(0, false, $"Sudija nije uspeo da oceni upit: {poruka}", model);
 }
 
-/// <summary>
-/// LLM-as-a-Judge — model ocenjuje kvalitet generisanog SQL-a.
-///
-/// Radi u dva režima:
-///   - u benchmarku ima i gold SQL, pa poredi dva upita;
-///   - u aplikaciji gold SQL ne postoji, pa procenjuje da li upit odgovara
-///     na postavljeno pitanje nad datom šemom.
-///
-/// Sudija treba da bude model RAZLIČIT od generatora. Kada model ocenjuje
-/// sopstveni izlaz javlja se self-preference bias — sklon je da sebe oceni
-/// bolje. To je ograničenje metode i u radu se navodi eksplicitno.
-/// </summary>
 public sealed class LlmJudge(ILlmProviderFactory fabrika)
 {
     private const string SistemskiPrompt = """
@@ -88,9 +76,6 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
         {
             var provajder = fabrika.Kreiraj(modelSudijeId);
 
-            // MaxTokens mora da bude izdašan: sudije koje "razmišljaju" pre
-            // odgovora potroše deo budžeta na razmišljanje, pa se JSON preseče
-            // na pola i ocena se izgubi iako je model odradio posao.
             var odgovor = await provajder.CompleteAsync(
                 new LlmRequest(SistemskiPrompt, prompt.ToString(), Temperature: 0, MaxTokens: 1500, JsonMode: true),
                 ct);
@@ -103,19 +88,11 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
         }
     }
 
-    /// <summary>
-    /// Modeli i pored JSON režima umeju da vrate tekst oko objekta ili da ga
-    /// obmotaju u ```json ogradu, pa se prvi JSON objekat izvlači regularnim
-    /// izrazom pre parsiranja.
-    /// </summary>
     internal static OcenaSudije Rasclani(string odgovor, string modelSudije)
     {
         var podudaranje = Regex.Match(odgovor, @"\{.*\}", RegexOptions.Singleline);
         if (!podudaranje.Success)
         {
-            // Odgovor nema zatvorenu vitičastu zagradu — najčešće zato što je
-            // presečen na granici tokena. Ocena je ipak na početku JSON-a, pa
-            // se izvlači pojedinačno umesto da se ceo odgovor odbaci.
             var spaseno = SpasiIzPresecenog(odgovor, modelSudije);
             return spaseno ?? OcenaSudije.Greska(
                 $"odgovor nije sadržao JSON ({Skrati(odgovor)})", modelSudije);
@@ -135,8 +112,6 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
                 ? ob.GetString() ?? ""
                 : "";
 
-            // Ako model kaže "tacan: true" a da ocenu ispod 4, veruje se oceni —
-            // ona je konkretnija i lakše se poredi sa execution accuracy.
             if (ocena < 4) tacan = false;
 
             return new OcenaSudije(ocena, tacan, obrazlozenje.Trim(), modelSudije);
@@ -147,10 +122,6 @@ public sealed class LlmJudge(ILlmProviderFactory fabrika)
         }
     }
 
-    /// <summary>
-    /// Poslednja odbrana kada je JSON presečen na granici tokena. Traži se
-    /// samo ocena; ako ni nje nema, odgovor se odbacuje.
-    /// </summary>
     private static OcenaSudije? SpasiIzPresecenog(string odgovor, string modelSudije)
     {
         var ocenaM = Regex.Match(odgovor, @"""ocena""\s*:\s*""?(\d+)", RegexOptions.IgnoreCase);

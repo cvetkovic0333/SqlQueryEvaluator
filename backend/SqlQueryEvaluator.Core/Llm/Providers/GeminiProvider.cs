@@ -5,11 +5,6 @@ using SqlQueryEvaluator.Core.Configuration;
 
 namespace SqlQueryEvaluator.Core.Llm.Providers;
 
-/// <summary>
-/// Google Gemini je jedini provajder u registru koji ne prati OpenAI oblik:
-/// telo je contents[].parts[].text, a sistemski prompt ide u posebno polje
-/// systemInstruction. Zato ima svoju klasu.
-/// </summary>
 public sealed class GeminiProvider(
     ModelDescriptor opis,
     HttpClient http,
@@ -74,10 +69,6 @@ public sealed class GeminiProvider(
 
             var kandidat = kandidati[0];
 
-            // Model može da vrati više delova (parts) — spajaju se svi osim
-            // onih označenih kao razmišljanje (thought: true), jer to nije
-            // odgovor. Kada je budžet potrošen još u razmišljanju, delova
-            // nema uopšte, pa se i to prihvata kao prazan tekst.
             var tekst = "";
             if (kandidat.TryGetProperty("content", out var sadrzajKandidata)
                 && sadrzajKandidata.TryGetProperty("parts", out var delovi))
@@ -87,11 +78,6 @@ public sealed class GeminiProvider(
                     .Select(d => d.TryGetProperty("text", out var t) ? t.GetString() : null));
             }
 
-            // Gemini 3 razmišlja pre odgovora i to razmišljanje troši ISTI
-            // budžet (maxOutputTokens) kao i sam odgovor. Kada ga potroši,
-            // vraća MAX_TOKENS i odsečen komad teksta — nekad kraj
-            // razmišljanja, nekad pola upita. Takav tekst nije odgovor modela
-            // i ne sme da se meri kao da jeste.
             var presecen = kandidat.TryGetProperty("finishReason", out var razlog)
                 && razlog.GetString() == "MAX_TOKENS";
 
@@ -102,9 +88,6 @@ public sealed class GeminiProvider(
                 if (usage.TryGetProperty("promptTokenCount", out var pt)) ulazni = pt.GetInt32();
                 if (usage.TryGetProperty("candidatesTokenCount", out var ctk)) izlazni = ctk.GetInt32();
 
-                // Tokeni razmišljanja se ne vide u odgovoru, ali troše granicu
-                // i naplaćuju se. Bez njih bi izgledalo da je model napisao
-                // 45 tokena, a potrošio je 1200. Groq ih već uračunava.
                 if (usage.TryGetProperty("thoughtsTokenCount", out var tt)) izlazni += tt.GetInt32();
             }
 
@@ -121,11 +104,6 @@ public sealed class GeminiProvider(
     }
 
 
-    /// <summary>
-    /// Provajder u zaglavlju Retry-After kaže koliko treba čekati. Bez toga
-    /// se pogađa, a svako promašeno pogađanje troši jedan zahtev iz dnevne
-    /// kvote i ništa ne dobija.
-    /// </summary>
     private static int? ProcitajRetryAfter(HttpResponseMessage odgovor)
     {
         if (odgovor.Headers.RetryAfter?.Delta is { } razmak)

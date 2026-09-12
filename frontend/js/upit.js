@@ -1,5 +1,3 @@
-// Tab "Upit" — pitanje govornim jezikom → SQL → ocena sudije → izvršavanje.
-
 import { api } from "./api.js";
 import { $, $$, escapeHtml, nacrtajTabelu, poruka, trajanje, brojFormat, postaviUcitavanje } from "./ui.js";
 import { daj, postavi } from "./stanje.js";
@@ -21,12 +19,8 @@ export function initUpit() {
     });
   });
 
-  // Čim korisnik krene da kuca novo pitanje, prethodni odgovor se sklanja.
-  // Inače na ekranu stoji SQL i rezultat starog pitanja, pa deluje kao da
-  // se odnose na ono što se upravo kuca.
   $("#upit-tekst").addEventListener("input", ocistiPrethodniOdgovor);
 
-  // Ctrl+Enter šalje upit — brže od traženja dugmeta mišem.
   $("#upit-tekst").addEventListener("keydown", (e) => {
     if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
@@ -54,9 +48,6 @@ async function prevedi() {
 
   $("#kartica-rezultat").classList.add("hidden");
 
-  // Modeli koji su danas iscrpeli kvotu se preskaču, po redosledu tačnosti
-  // iz merenja. Bez ovoga korisnik dobije grešku i mora sam da bira drugi
-  // model, iako aplikacija već zna koji je sledeći najbolji.
   const preskoceni = [];
 
   try {
@@ -88,7 +79,6 @@ async function prevedi() {
       }
     }
 
-    // Nijedan model nije uspeo.
     status.className = "upit-status greska";
     status.textContent = preskoceni.length > 1
       ? `Svi modeli su iscrpeli dnevnu kvotu (${preskoceni.map(imeModela).join(", ")}). Pokušaj sutra.`
@@ -103,7 +93,6 @@ async function prevedi() {
   }
 }
 
-/** Vraća prikaz na početno stanje: bez generisanog SQL-a i bez rezultata. */
 function ocistiPrethodniOdgovor() {
   if ($("#kartica-sql").classList.contains("hidden")
       && $("#kartica-rezultat").classList.contains("hidden")) return;
@@ -117,7 +106,6 @@ function ocistiPrethodniOdgovor() {
   postavi({ poslednjiPrevod: null });
 }
 
-/** Izabrani model prvi, pa ostali po tačnosti iz merenja. */
 function redosledPokusaja() {
   const s = daj();
   const rang = s.rangLista?.length ? s.rangLista : s.modeli.filter((m) => m.imaKljuc).map((m) => m.id);
@@ -135,8 +123,6 @@ function prikaziPrevod(o) {
   $("#sql-meta").textContent =
     `${o.modelId} · ${trajanje(o.trajanjeMs)} · ${o.ulazniTokeni + o.izlazniTokeni} tokena`;
 
-  // Sanitizer je odbio upit — prikazuje se sirov odgovor modela i razlog,
-  // a dugme za izvršavanje se gasi.
   if (!o.bezbedan) {
     $("#sql-prikaz").textContent = o.sirovOdgovor || "(prazan odgovor)";
     $("#ocena-znacka").className = "ocena-znacka ocena-losa";
@@ -211,11 +197,6 @@ async function izvrsi() {
   }
 }
 
-/**
- * Preuzima PDF sa rezultatom upita. Browser ne može da sačuva fajl direktno
- * iz POST odgovora, pa se sadržaj pretvara u privremeni blob i klikne se
- * nevidljiv link — to pokreće standardno preuzimanje.
- */
 async function izveziPdf() {
   const o = daj().poslednjiPrevod;
   if (!o?.sql) return;
@@ -243,7 +224,6 @@ async function izveziPdf() {
     veza.click();
     veza.remove();
 
-    // Blob se oslobađa tek pošto je browser preuzeo sadržaj.
     setTimeout(() => URL.revokeObjectURL(url), 30000);
 
     status.className = "upit-status ok";
@@ -266,7 +246,6 @@ async function kopiraj() {
   }
 }
 
-/** Poziva se iz istorije: vraća stari upit u editor u tabu "Baza i upit". */
 export function ucitajUEditor(stavka) {
   $("#upit-tekst").value = stavka.pitanje;
   if (stavka.baza) {

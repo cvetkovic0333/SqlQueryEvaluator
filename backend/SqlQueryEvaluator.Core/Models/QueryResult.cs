@@ -1,13 +1,11 @@
 namespace SqlQueryEvaluator.Core.Models;
 
-/// <summary>Jezik na kome je postavljeno pitanje.</summary>
 public enum Jezik
 {
     Sr,
     En
 }
 
-/// <summary>Težina test zadatka.</summary>
 public enum Tezina
 {
     Lak,
@@ -15,7 +13,6 @@ public enum Tezina
     Tezak
 }
 
-/// <summary>Rezultat izvršavanja SQL upita nad bazom.</summary>
 public sealed class QueryResult
 {
     public List<string> Kolone { get; init; } = [];
@@ -32,7 +29,6 @@ public sealed class QueryResult
         new() { Uspesno = false, Greska = greska, SqlState = sqlState };
 }
 
-/// <summary>Ishod provere SQL-a pre izvršavanja.</summary>
 public sealed record SanitizerResult(bool Prihvacen, string Sql, string? Razlog)
 {
     public static SanitizerResult Ok(string sql) => new(true, sql, null);

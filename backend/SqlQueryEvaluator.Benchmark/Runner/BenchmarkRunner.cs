@@ -11,19 +11,6 @@ using SqlQueryEvaluator.Core.TextToSql;
 
 namespace SqlQueryEvaluator.Benchmark.Runner;
 
-/// <summary>
-/// Offline testiranje svih modela nad test setom.
-///
-/// Za svaki par (zadatak, model, jezik):
-///   1. model prevede pitanje u SQL,
-///   2. sanitizer proveri upit,
-///   3. izvrši se i generisani i gold SQL pa se porede REZULTATI
-///      (execution accuracy — objektivna mera),
-///   4. sudija nezavisno oceni upit ocenom 1-5.
-///
-/// Poslednja dva koraka se rade oba namerno: tek poređenjem ocene sudije sa
-/// objektivnom merom vidi se koliko je LLM-as-a-Judge uopšte pouzdan.
-/// </summary>
 public sealed class BenchmarkRunner(
     ILlmProviderFactory fabrika,
     SchemaIntrospector introspektor,
@@ -117,10 +104,6 @@ public sealed class BenchmarkRunner(
                     uradjeno++;
                     var oznaka = $"[{uradjeno + preskoceno}/{ukupno}] {model} · {zadatak.Id} · {jezik}";
 
-                    // Kada provajder javi da je kvota probijena, čeka se tačno
-                    // onoliko koliko on traži, pa se zadatak ponavlja. Slepo
-                    // ponavljanje ovde samo troši dnevnu kvotu bez ijednog
-                    // upotrebljivog rezultata.
                     var pokusaj = 0;
                     while (true)
                     {
@@ -128,11 +111,6 @@ public sealed class BenchmarkRunner(
                         {
                             var rezultat = await ObradiAsync(pokretanjeId, model, zadatak, jezik, modelSudije, ct);
 
-                            // HTTP klijent puca posle 120 s, pa duže trajanje ne može
-                            // biti stvarna latencija modela — to je merenje pokvareno
-                            // spolja (npr. računar je bio uspavan usred poziva).
-                            // Jedan takav podatak diže prosek modela za red veličine
-                            // i pokvari grafikon brzine, pa se poziv radije ponovi.
                             if (rezultat.TrajanjeMs > 120_000 && pokusaj < 3)
                             {
                                 pokusaj++;
@@ -160,8 +138,6 @@ public sealed class BenchmarkRunner(
                         }
                     }
 
-                    // Besplatni tierovi imaju stroge rate limite; pauza između
-                    // poziva je jeftinija od stalnog udaranja u 429.
                     if (arg.PauzaMs > 0)
                         await Task.Delay(arg.PauzaMs, ct);
                 }
@@ -234,15 +210,6 @@ public sealed class BenchmarkRunner(
         };
     }
 
-    /// <summary>
-    /// Ponovo poredi sačuvane upite sa gold rezultatom, bez ijednog poziva
-    /// modelu. Koristi se kada se ispravi pravilo poređenja: odgovor modela
-    /// se nije promenio, pa nema razloga da se ponovo troši kvota — menja se
-    /// samo presuda da li je taj odgovor tačan.
-    ///
-    /// Preskaču se odgovori koje je sanitizer odbio (npr. presečeni): oni
-    /// nikada nisu ni stigli do baze, pa nema šta da se poredi.
-    /// </summary>
     private async Task<int> PonovoUporediAsync(int pokretanjeId, string testSetPutanja, CancellationToken ct)
     {
         var testSet = await TestSet.UcitajAsync(testSetPutanja, ct);
@@ -256,8 +223,6 @@ public sealed class BenchmarkRunner(
 
         foreach (var u in upiti)
         {
-            // Odgovor je prošao sanitizer ako je izvršen (ispravan/tačan) ili
-            // ako je pukao tek u bazi. Sve ostalo je odbila provera.
             var prosaoProveru = u.RezultatIsti || u.SqlIspravan
                 || (u.GreskaIzvrsavanja?.StartsWith("Generisani SQL se nije izvršio", StringComparison.Ordinal) ?? false);
 
@@ -292,7 +257,6 @@ public sealed class BenchmarkRunner(
         static string Znak(bool tacno, bool ispravan) => tacno ? "✓" : ispravan ? "≈" : "✗";
     }
 
-    /// <summary>Provera da li svaki konfigurisan model ima ključ i odgovara na trivijalan poziv.</summary>
     private async Task<int> ProveriKljuceveAsync(CancellationToken ct)
     {
         Console.WriteLine("Provera modela iz registra (appsettings.json → Models):");
@@ -314,10 +278,6 @@ public sealed class BenchmarkRunner(
             {
                 var provajder = fabrika.Kreiraj(opis.Id);
 
-                // MaxTokens mora da bude izdašan i za ovako trivijalan poziv:
-                // modeli koji "razmišljaju" pre odgovora (GPT-OSS, Qwen3)
-                // potroše mali budžet na razmišljanje i vrate prazan tekst,
-                // pa bi ispravan model izgledao kao pokvaren.
                 var odgovor = await provajder.CompleteAsync(new LlmRequest(
                     "You are a test probe. Reply with exactly: OK",
                     "Reply with exactly: OK", MaxTokens: 512), ct);
@@ -369,11 +329,6 @@ public sealed class BenchmarkRunner(
         await SacuvajIzlazAsync(pokretanjeId, redovi, ct);
     }
 
-    /// <summary>
-    /// Rezultati se čuvaju i u fajl, pored baze — u radu idu kao prilog, a
-    /// zapis nosi i tačan datum pokretanja, jer se ponuda besplatnih modela
-    /// vremenom menja.
-    /// </summary>
     private static async Task SacuvajIzlazAsync(
         int pokretanjeId, IReadOnlyList<RezultatZaMetriku> redovi, CancellationToken ct)
     {

@@ -1,16 +1,9 @@
-// Tab "Baza i upit" — leva strana lista tabela, desna prikaz podataka.
-//
-// Čekiranje tabele ODMAH učitava njen sadržaj; ne postoji korak "pa sad
-// klikni negde drugde". Više čekiranih tabela znači više prikazanih.
-
 import { api } from "./api.js";
 import { $, escapeHtml, brojFormat, nacrtajTabelu, poruka, trajanje } from "./ui.js";
 import { daj, postavi } from "./stanje.js";
 
 const KORAK = 50;
 
-// Koliko je redova do sada učitano za svaku prikazanu tabelu, ima li još,
-// i da li je dopuna već u toku (da skrol ne pokrene dva ista zahteva).
 const ucitano = new Map();
 const imaJos = new Map();
 const ucitavaSe = new Set();
@@ -85,7 +78,6 @@ export function osveziInfoIzabranih() {
         .map((t) => `<span class="znacka plava">${escapeHtml(t)}</span>`).join(" ")}`;
 }
 
-/** Prikazuje po jednu karticu za svaku čekiranu tabelu. */
 function osveziPrikaz() {
   const s = daj();
   const kontejner = $("#tabela-detalj");
@@ -99,8 +91,6 @@ function osveziPrikaz() {
     return;
   }
 
-  // Kartice koje više nisu čekirane se uklanjaju, a postojeće se ne diraju
-  // da se ne izgubi ono što je korisnik već dolistao.
   [...ucitano.keys()].forEach((naziv) => {
     if (!s.izabraneTabele.has(naziv)) {
       ucitano.delete(naziv);
@@ -139,11 +129,6 @@ function osveziPrikaz() {
   });
 }
 
-/**
- * Dovlači sledeću grupu redova i dodaje ih na postojeće. Nema dugmeta —
- * redovi stižu sami kada se dođe blizu dna, pa se tabela pregleda običnim
- * skrolovanjem, isto kao rezultat upita.
- */
 async function ucitajStranu(naziv, offset) {
   const s = daj();
   const grid = document.querySelector(`[data-grid="${naziv}"]`);
@@ -155,7 +140,7 @@ async function ucitajStranu(naziv, offset) {
 
   try {
     const p = await api.pregled(s.aktivnaBaza, naziv, KORAK, offset);
-    if (!document.querySelector(`[data-grid="${naziv}"]`)) return; // odčekirana u međuvremenu
+    if (!document.querySelector(`[data-grid="${naziv}"]`)) return;
 
     if (offset === 0) nacrtajTabelu(grid, p.kolone, p.redovi);
     else dodajRedove(grid, p.redovi);
@@ -170,8 +155,6 @@ async function ucitajStranu(naziv, offset) {
 
     if (offset === 0) povežiSkrol(naziv, okvir);
 
-    // Ako je tabela niža od okvira, skrol se nikada neće okinuti, pa se
-    // sledeća grupa dovlači odmah dok se okvir ne popuni.
     if (p.imaJos && okvir.scrollHeight <= okvir.clientHeight + 40) {
       ucitavaSe.delete(naziv);
       await ucitajStranu(naziv, prikazano);

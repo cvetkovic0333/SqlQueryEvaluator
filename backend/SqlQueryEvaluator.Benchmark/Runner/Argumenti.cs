@@ -1,6 +1,5 @@
 namespace SqlQueryEvaluator.Benchmark.Runner;
 
-/// <summary>Argumenti komandne linije za benchmark.</summary>
 public sealed class Argumenti
 {
     public List<string> Modeli { get; private set; } = [];

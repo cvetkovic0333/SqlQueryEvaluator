@@ -1,4 +1,3 @@
-# ---- .NET ----
 bin/
 obj/
 [Dd]ebug/
@@ -9,28 +8,18 @@ obj/
 project.lock.json
 artifacts/
 
-# ---- IDE ----
 .vs/
 .idea/
-# .vscode je namerno u repou (launch/tasks/extensions), ali ne i lokalna podesavanja:
 .vscode/*.local.json
 
-# ---- Tajne (NIKAD na GitHub) ----
 appsettings.Development.json
 appsettings.Local.json
 secrets.json
 *.env
 .env
 
-# ---- Rezultati benchmarka ----
-# Ovo NISU obicni generisani fajlovi nego eksperimentalni podaci rada:
-# svaki je rezultat stvarnih poziva ka modelima i potrosene dnevne kvote,
-# pa se cuvaju u repou zajedno sa kodom koji ih je proizveo.
-
-# ---- Prateca dokumentacija, ne ide u repo ----
 *.pdf
 
-# ---- OS ----
 Thumbs.db
 desktop.ini
 .DS_Store

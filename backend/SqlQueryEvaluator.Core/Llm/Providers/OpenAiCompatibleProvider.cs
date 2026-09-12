@@ -5,12 +5,6 @@ using SqlQueryEvaluator.Core.Configuration;
 
 namespace SqlQueryEvaluator.Core.Llm.Providers;
 
-/// <summary>
-/// Jedna klasa pokriva Groq, OpenRouter i Mistral — sva tri izlažu isti
-/// oblik: POST {BaseUrl}/chat/completions sa "Authorization: Bearer".
-/// Razlike su samo u BaseUrl-u, nazivu modela i ključu, a to sve dolazi
-/// iz <see cref="ModelDescriptor"/>-a, dakle iz appsettings.json.
-/// </summary>
 public sealed class OpenAiCompatibleProvider(
     ModelDescriptor opis,
     HttpClient http,
@@ -41,7 +35,6 @@ public sealed class OpenAiCompatibleProvider(
         };
         poruka.Headers.Add("Authorization", $"Bearer {apiKljuc}");
 
-        // OpenRouter traži ova zaglavlja da bi zahtev pripisao aplikaciji.
         if (Opis.BaseUrl.Contains("openrouter", StringComparison.OrdinalIgnoreCase))
         {
             poruka.Headers.Add("HTTP-Referer", "https://github.com/cvetkovic0333/SqlQueryEvaluator");
@@ -75,8 +68,6 @@ public sealed class OpenAiCompatibleProvider(
                              .GetProperty("content")
                              .GetString() ?? "";
 
-            // "length" znači da je model stao na granici max_tokens. Kod
-            // GPT-OSS i Qwen3 u tu granicu ulazi i razmišljanje.
             var presecen = izbor.TryGetProperty("finish_reason", out var razlog)
                 && razlog.ValueKind == JsonValueKind.String
                 && razlog.GetString() == "length";
@@ -98,11 +89,6 @@ public sealed class OpenAiCompatibleProvider(
     }
 
 
-    /// <summary>
-    /// Provajder u zaglavlju Retry-After kaže koliko treba čekati. Bez toga
-    /// se pogađa, a svako promašeno pogađanje troši jedan zahtev iz dnevne
-    /// kvote i ništa ne dobija.
-    /// </summary>
     private static int? ProcitajRetryAfter(HttpResponseMessage odgovor)
     {
         if (odgovor.Headers.RetryAfter?.Delta is { } razmak)

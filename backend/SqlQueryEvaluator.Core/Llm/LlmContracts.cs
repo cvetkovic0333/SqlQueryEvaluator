@@ -9,11 +9,6 @@ public sealed record LlmRequest(
     int MaxTokens = 1200,
     bool JsonMode = false);
 
-/// <param name="Presecen">
-/// Model je stao na granici izlaznih tokena, pa tekst nije ceo odgovor.
-/// Kod modela koji "razmišljaju" to se dešava i kada je vidljivi tekst
-/// kratak — razmišljanje troši istu granicu.
-/// </param>
 public sealed record LlmResponse(
     string Text,
     int UlazniTokeni,
@@ -22,11 +17,6 @@ public sealed record LlmResponse(
     string ModelId,
     bool Presecen = false);
 
-/// <summary>
-/// Greška u komunikaciji sa modelom. <see cref="RateLimit"/> se posebno
-/// izdvaja jer besplatni tierovi često vraćaju 429 i benchmark na to reaguje
-/// pauzom umesto prekidom.
-/// </summary>
 public sealed class LlmException(
     string poruka, int? statusKod = null, Exception? uzrok = null, int? cekajSekundi = null)
     : Exception(poruka, uzrok)
@@ -34,11 +24,6 @@ public sealed class LlmException(
     public int? StatusKod { get; } = statusKod;
     public bool RateLimit => StatusKod == 429;
 
-    /// <summary>
-    /// Koliko sekundi provajder traži da se čeka (zaglavlje Retry-After).
-    /// Provajder zna svoj limit bolje od nas — čekanje tačno toliko troši
-    /// mnogo manje kvote nego slepo ponavljanje.
-    /// </summary>
     public int? CekajSekundi { get; } = cekajSekundi;
 }
 

@@ -12,9 +12,6 @@ public static class BenchmarkEndpoints
 {
     public static void MapBenchmarkEndpoints(this WebApplication app)
     {
-        // Sve što dashboard crta dolazi odavde, iz stvarnih rezultata testa.
-        // Ako test još nije pokrenut, vraća se prazno — interfejs tada
-        // prikazuje uputstvo, a ne izmišljene brojeve.
         app.MapGet("/api/benchmark/pregled", async (
             int? pokretanje,
             BenchmarkRepository repo,
@@ -25,9 +22,6 @@ public static class BenchmarkEndpoints
         {
             var pokretanja = await repo.SvaPokretanjaAsync(ct);
 
-            // Bez ovoga bi se rezultati svih pokretanja sabrali u jedan
-            // prosek — probni run od tri zadatka bi krivio brojeve punog
-            // testa. Podrazumevano se prikazuje poslednje pokretanje.
             var izabrano = pokretanje ?? pokretanja.FirstOrDefault()?.PokretanjeId;
             var redovi = izabrano is null
                 ? []
@@ -49,7 +43,6 @@ public static class BenchmarkEndpoints
 
             var poModelu = MetricsCalculator.PoModelu(redovi);
 
-            // Pobednik: najveća execution accuracy, a pri izjednačenju brži model.
             var pobednik = poModelu
                 .OrderByDescending(p => p.Value.ExecutionAccuracy)
                 .ThenBy(p => p.Value.ProsecnoTrajanjeMs)
@@ -60,10 +53,6 @@ public static class BenchmarkEndpoints
                 .Where(t => redovi.Any(r => r.Tezina == t))
                 .ToArray();
 
-            // Prikazuju se samo jezici koji su STVARNO mereni. Ako se test
-            // pusti samo na srpskom, engleski bi inače izašao kao 0% i
-            // izgledalo bi da modeli na engleskom potpuno padaju — a nisu
-            // ni pitani.
             var jezici = new[] { "sr", "en" }
                 .Where(j => redovi.Any(r => r.Jezik == j))
                 .ToArray();
@@ -90,8 +79,6 @@ public static class BenchmarkEndpoints
                     tokeni = p.Value.ProsecnoTokena
                 }),
 
-                // Tačnost po težini zadatka — pokazuje koliko model pada
-                // kada zadatak postane složeniji.
                 poTezini = poModelu.Keys.OrderBy(k => k).Select(model => new
                 {
                     modelId = model,
@@ -102,8 +89,6 @@ public static class BenchmarkEndpoints
                 }),
                 tezine,
 
-                // Srpski vs engleski — direktna provera koliko model gubi
-                // kada pitanje nije na engleskom.
                 poJeziku = poModelu.Keys.OrderBy(k => k).Select(model => new
                 {
                     modelId = model,
@@ -114,8 +99,6 @@ public static class BenchmarkEndpoints
                 }),
                 jezici,
 
-                // Slaganje sudije sa objektivnom merom — koliko je
-                // LLM-as-a-Judge uopšte pouzdan.
                 slaganjeSudije = SlaganjeDto(MetricsCalculator.IzracunajSlaganje(redovi)),
                 slaganjePoModelu = poModelu.Keys.OrderBy(k => k).Select(model =>
                 {
@@ -125,7 +108,6 @@ public static class BenchmarkEndpoints
             });
         });
 
-        // Izvoz tabele metrika u PDF — prilog za pisani deo rada.
         app.MapGet("/api/benchmark/izvoz.pdf", async (
             int? pokretanje,
             BenchmarkRepository repo,

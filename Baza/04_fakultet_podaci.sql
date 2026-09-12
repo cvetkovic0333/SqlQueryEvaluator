@@ -1,15 +1,3 @@
--- =====================================================================
--- 04_fakultet_podaci.sql — popunjavanje šeme "fakultet"
---
--- Podaci su 100% DETERMINISTIČKI (bez random()), isto kao kod prodavnice.
---
--- Broj redova po tabeli:
---   katedre 10 | smerovi 10 | profesori 100 | predmeti 100
---   studenti 1500 | upisi_predmeta 5000 | ispitni_rokovi 10
---   prijave_ispita 5000
---
--- Pokretanje: psql -U postgres -d sqleval -f Baza/04_fakultet_podaci.sql
--- =====================================================================
 \set ON_ERROR_STOP on
 
 TRUNCATE fakultet.prijave_ispita, fakultet.upisi_predmeta, fakultet.ispitni_rokovi,
@@ -17,7 +5,6 @@ TRUNCATE fakultet.prijave_ispita, fakultet.upisi_predmeta, fakultet.ispitni_roko
          fakultet.smerovi, fakultet.katedre
          RESTART IDENTITY CASCADE;
 
--- --------------------------------------------------------- katedre (10)
 INSERT INTO fakultet.katedre (katedra_id, naziv, skraceni_naziv, godina_osnivanja) VALUES
  (1,  'Katedra za računarstvo i informatiku', 'RI',  1985),
  (2,  'Katedra za elektroniku',               'EL',  1960),
@@ -30,7 +17,6 @@ INSERT INTO fakultet.katedre (katedra_id, naziv, skraceni_naziv, godina_osnivanj
  (9,  'Katedra za biomedicinsku tehniku',     'BM',  2010),
  (10, 'Katedra za softversko inženjerstvo',   'SI',  2015);
 
--- --------------------------------------------------------- smerovi (10)
 INSERT INTO fakultet.smerovi (smer_id, naziv, katedra_id, nivo_studija, trajanje_godina, ukupno_espb) VALUES
  (1,  'Računarstvo i informatika',   1,  'osnovne',   4, 240),
  (2,  'Elektronika',                 2,  'osnovne',   4, 240),
@@ -43,7 +29,6 @@ INSERT INTO fakultet.smerovi (smer_id, naziv, katedra_id, nivo_studija, trajanje
  (9,  'Softversko inženjerstvo',     10, 'master',    1,  60),
  (10, 'Elektrotehnika i računarstvo', 1, 'doktorske', 3, 180);
 
--- ------------------------------------------------------- profesori (100)
 WITH osnova AS (
     SELECT
         i,
@@ -77,9 +62,6 @@ SELECT
     'K' || (1 + ((o.i - 1) % 10)) || '-' || lpad((100 + o.i)::text, 3, '0')
 FROM osnova o;
 
--- -------------------------------------------------------- predmeti (100)
--- Po 10 predmeta na svakom smeru: predmeti smera S imaju
--- predmet_id od (S-1)*10+1 do S*10. Ta pravilnost se koristi u upisima.
 WITH osnova AS (
     SELECT
         i,
@@ -100,17 +82,12 @@ SELECT
     (ARRAY[6, 5, 6, 7, 8, 6, 5, 7, 6, 4])[o.redni_broj],
     1 + ((o.i * 3) % 8),
     o.smer_id,
-    -- Modul 80, a ne 100: profesori 81-100 ne predaju nijedan predmet.
-    -- To je realno (novoizabrani, na bolovanju) i daje smisla upitu
-    -- "koji profesori ne predaju nijedan predmet".
     1 + ((o.i * 7) % 80),
     (o.redni_broj <= 7)
 FROM osnova o
 JOIN fakultet.smerovi s ON s.smer_id = o.smer_id
 JOIN fakultet.katedre k ON k.katedra_id = s.katedra_id;
 
--- -------------------------------------------------------- studenti (1500)
--- Smer studenta: 1 + ((student_id - 1) % 10) — koristi se u upisima predmeta.
 WITH osnova AS (
     SELECT
         i,
@@ -154,7 +131,6 @@ SELECT
     DATE '1998-01-01' + ((o.i * 37) % 3000)
 FROM osnova o;
 
--- --------------------------------------------------- ispitni_rokovi (10)
 INSERT INTO fakultet.ispitni_rokovi (rok_id, naziv, skolska_godina, datum_pocetka, datum_kraja) VALUES
  (1,  'Januarski',    '2023/2024', DATE '2024-01-15', DATE '2024-02-04'),
  (2,  'Februarski',   '2023/2024', DATE '2024-02-05', DATE '2024-02-25'),
@@ -167,10 +143,6 @@ INSERT INTO fakultet.ispitni_rokovi (rok_id, naziv, skolska_godina, datum_pocetk
  (9,  'Junski',       '2024/2025', DATE '2025-06-09', DATE '2025-06-29'),
  (10, 'Septembarski', '2024/2025', DATE '2025-09-01', DATE '2025-09-21');
 
--- -------------------------------------------------- upisi_predmeta (5000)
--- Svaki student upisuje 3-4 predmeta, i to isključivo predmete SVOG smera.
--- "krug" obezbeđuje da se isti predmet ne ponovi istom studentu u istoj
--- školskoj godini (poštuje UNIQUE ograničenje).
 WITH generisano AS (
     SELECT
         i,
@@ -190,13 +162,6 @@ SELECT
                          ELSE DATE '2024-10-01' + (g.i % 30) END
 FROM generisano g;
 
--- -------------------------------------------------- prijave_ispita (5000)
--- Po jedna prijava za svaki upis predmeta. Svaka 11. prijava nema rezultat
--- (student nije izašao na ispit) — otuda NULL u kolonama bodovi i ocena.
---
--- Bodovi se pomeraju u zavisnosti od smera (-16 do +20 poena), da smerovi
--- ne bi svi imali isti prosek i istu prolaznost. Bez te razlike upiti tipa
--- "smer sa najboljim prosekom" vraćaju praktično izjednačen rezultat.
 WITH osnova AS (
     SELECT
         u.upis_id,
@@ -235,7 +200,6 @@ SELECT
 FROM osnova o
 JOIN fakultet.ispitni_rokovi r ON r.rok_id = o.rok_id;
 
--- ------------------------------- sinhronizacija IDENTITY sekvenci
 SELECT setval(pg_get_serial_sequence('fakultet.katedre',        'katedra_id'),  (SELECT max(katedra_id)  FROM fakultet.katedre));
 SELECT setval(pg_get_serial_sequence('fakultet.smerovi',        'smer_id'),     (SELECT max(smer_id)     FROM fakultet.smerovi));
 SELECT setval(pg_get_serial_sequence('fakultet.profesori',      'profesor_id'), (SELECT max(profesor_id) FROM fakultet.profesori));

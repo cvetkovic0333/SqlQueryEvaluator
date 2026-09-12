@@ -11,21 +11,6 @@ public sealed record IshodPoredjenja(
     int RedovaGold,
     int RedovaGenerisano);
 
-/// <summary>
-/// Execution accuracy — objektivna metrika kvaliteta.
-///
-/// Izvršava se i gold i generisani SQL nad istom bazom, pa se porede
-/// REZULTATI, a ne tekst upita. Razlog: isto pitanje ima više ispravnih
-/// formulacija (JOIN vs podupit, drugačiji redosled kolona), pa bi
-/// poređenje teksta kažnjavalo tačne odgovore.
-///
-/// Pravila poređenja:
-///   - redovi se porede kao multiskup (redosled se ignoriše), OSIM kada
-///     gold upit ima ORDER BY — tada je redosled deo tačnog odgovora;
-///   - imena kolona se ignorišu (model sme da nazove kolonu kako hoće),
-///     ali broj kolona mora da se poklopi;
-///   - brojevi se zaokružuju na 4 decimale, tekst se trimuje.
-/// </summary>
 public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
 {
     private const int MaxRedovaZaPoredjenje = 5000;
@@ -90,19 +75,9 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
             gold.BrojRedova, generisano.BrojRedova);
     }
 
-    /// <summary>
-    /// Red se svodi na tekst sa razdvajačem koji se ne pojavljuje u podacima,
-    /// da vrednosti iz susednih kolona ne bi slučajno "iscurele" jedna u drugu.
-    /// </summary>
     private static string NormalizujRed(List<object?> red) =>
         string.Join("␟", red.Select(NormalizujVrednost));
 
-    /// <summary>
-    /// Brojevi se ispisuju formatom "0.####" — bez pratećih nula. decimal
-    /// pamti broj decimala, pa bi inače 12.30 (numeric(10,2) iz gold upita)
-    /// i 12.3000 (AVG bez zaokruživanja) bili različit tekst iako su isti
-    /// broj, a isto i 42 (bigint) naspram 42.00 (numeric).
-    /// </summary>
     private const string FormatBroja = "0.####";
 
     internal static string NormalizujVrednost(object? v) => v switch
@@ -116,10 +91,6 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
         _ => Convert.ToString(v, CultureInfo.InvariantCulture)?.Trim() ?? ""
     };
 
-    /// <summary>
-    /// Traži se ORDER BY koji pripada samom upitu, a ne onaj unutar window
-    /// funkcije (OVER (ORDER BY ...)) — taj ne određuje redosled rezultata.
-    /// </summary>
     internal static bool ImaOrderBy(string sql)
     {
         var bezZagrada = UkloniZagrade(sql);

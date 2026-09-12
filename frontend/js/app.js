@@ -1,5 +1,3 @@
-// Ulazna tačka frontenda: učita registar modela i listu baza, pa poveže tabove.
-
 import { api } from "./api.js";
 import { $, initTabovi, escapeHtml, poruka } from "./ui.js";
 import { postavi, daj } from "./stanje.js";
@@ -19,7 +17,6 @@ async function start() {
 
   osveziInfoIzabranih();
 
-  // Tabele se prikazuju odmah po otvaranju, bez klika na dugme.
   ucitajSemu();
   ucitajDashboard();
 }
@@ -43,15 +40,10 @@ async function ucitajModele() {
   try {
     const podaci = await api.modeli();
 
-    // U padajucem meniju se podrazumevano nudi model koji je NAJBOLJE prosao
-    // test, a ne onaj upisan u konfiguraciji — merenje je merodavnije od
-    // podesavanja koje je moglo da zastari.
     const rang = await rangModela(podaci);
     const pobednik = rang[0] ?? podaci.podrazumevaniModel;
     postavi({ modeli: podaci.modeli, rangLista: rang, aktivniModel: pobednik });
 
-    // Model bez ključa se vidi u listi, ali je jasno označen i ne može da se
-    // izabere — bolje nego da poziv pukne tek kada korisnik pritisne dugme.
     $("#upit-model").innerHTML = podaci.modeli.map((m) => `
       <option value="${escapeHtml(m.id)}" ${m.imaKljuc ? "" : "disabled"}
               ${m.id === pobednik ? "selected" : ""}>
@@ -64,10 +56,6 @@ async function ucitajModele() {
   }
 }
 
-/**
- * Nijedan model nema ključ — aplikacija radi, ali ne može da prevodi.
- * Umesto tihe greške pri prvom kliku, upozorenje stoji odmah u tabu "Upit".
- */
 function upozoriNaKljuceve() {
   const cilj = $("#tab-baza .baza-desno");
   cilj.insertAdjacentHTML("afterbegin", `
@@ -86,11 +74,6 @@ function upozoriNaKljuceve() {
     </div>`);
 }
 
-/**
- * Modeli poredjani po tacnosti iz poslednjeg merenja, od najboljeg naniže,
- * i to samo oni koji imaju podesen API kljuc. Prvi je podrazumevani, a
- * ostatak sluzi kao redosled zamene kada model iscrpi dnevnu kvotu.
- */
 async function rangModela(podaci) {
   const upotrebljivi = podaci.modeli.filter((m) => m.imaKljuc).map((m) => m.id);
 
@@ -98,12 +81,10 @@ async function rangModela(podaci) {
     const b = await api.benchmark();
     if (b.imaPodataka && Array.isArray(b.modeli)) {
       const izmereni = b.modeli.map((m) => m.modelId).filter((id) => upotrebljivi.includes(id));
-      // Neizmereni modeli idu na kraj — ne znamo im tacnost, ali rade.
       const ostali = upotrebljivi.filter((id) => !izmereni.includes(id));
       if (izmereni.length > 0) return [...izmereni, ...ostali];
     }
   } catch {
-    // dashboard nije dostupan — nije razlog da tab sa upitom ne radi
   }
 
   const podrazumevani = podaci.podrazumevaniModel;

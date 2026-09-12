@@ -3,15 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using SqlQueryEvaluator.Benchmark.Runner;
 using SqlQueryEvaluator.Core;
 
-// Runner se pokreće iz korena projekta (zbog putanja benchmark/testset.json
-// i benchmark/results/), pa se radni direktorijum pomera ako je pokrenut iz
-// bin foldera preko `dotnet run`.
 PodesiRadniDirektorijum();
 
-// appsettings.Development.json drži lozinke i API ključeve i nikada ne ide
-// u repo (u .gitignore je). Učitava se po putanji, pa ne zavisi od atributa
-// koji SDK generiše pri build-u — za razliku od user-secrets, koji na nekim
-// mašinama tiho izostanu i aplikacija se podigne bez lozinke.
 var konfiguracija = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false)

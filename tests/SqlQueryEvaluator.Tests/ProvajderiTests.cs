@@ -7,10 +7,6 @@ using SqlQueryEvaluator.Core.TextToSql;
 
 namespace SqlQueryEvaluator.Tests;
 
-/// <summary>
-/// Odgovori provajdera se ovde ne traže sa interneta nego se podmeću iz
-/// testa — oblik JSON-a je prepisan iz stvarnih odgovora.
-/// </summary>
 public class ProvajderiTests
 {
     private sealed class LazniServer(string telo) : HttpMessageHandler
@@ -37,8 +33,6 @@ public class ProvajderiTests
     [Fact]
     public async Task Gemini_prepoznaje_odgovor_presecen_razmisljanjem()
     {
-        // Stvaran slučaj: od 1200 tokena 1149 je otišlo na razmišljanje, a
-        // vraćen je odsečen komad teksta koji nije ni SQL.
         var o = await Gemini("""
             {"candidates":[{"content":{"parts":[{"text":"**:\n - Is `polozen` boolean?","thoughtSignature":"x"}],"role":"model"},
               "finishReason":"MAX_TOKENS"}],
@@ -64,7 +58,6 @@ public class ProvajderiTests
     [Fact]
     public async Task Gemini_bez_delova_vraca_prazan_tekst_umesto_greske()
     {
-        // Kada je ceo budžet potrošen na razmišljanje, "parts" ne postoji.
         var o = await Gemini("""{"candidates":[{"content":{"role":"model"},"finishReason":"MAX_TOKENS"}]}""");
 
         Assert.True(o.Presecen);
@@ -94,7 +87,6 @@ public class ProvajderiTests
     [Fact]
     public void Sanitizer_odbija_presecen_odgovor_iako_je_komad_ispravan_sql()
     {
-        // "SELECT a FROM t" bi prošao proveru, ali je to samo početak upita.
         var r = SqlSanitizer.Proveri("SELECT a FROM t", presecen: true);
 
         Assert.False(r.Prihvacen);

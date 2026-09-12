@@ -54,9 +54,6 @@ public static class SemaEndpoints
             });
         });
 
-        // Pregled sadržaja tabele. Naziv tabele se NE lepi u SQL kako je stigao —
-        // prvo se traži u pročitanoj šemi, pa se koristi vrednost iz šeme.
-        // Tako proizvoljan tekst iz URL-a ne može da dođe do baze.
         app.MapGet("/api/sema/{baza}/{tabela}/pregled", async (
             string baza,
             string tabela,
@@ -80,9 +77,6 @@ public static class SemaEndpoints
             var koliko = Math.Clamp(limit ?? 50, 1, 500);
             var preskoci = Math.Max(offset ?? 0, 0);
 
-            // Bez ORDER BY, PostgreSQL ne garantuje isti redosled između dva
-            // upita, pa bi listanje "sledećih 50" umelo da preskoči ili
-            // ponovi redove. Sortira se po primarnom ključu.
             var redosled = nadjena.Kolone.FirstOrDefault(k => k.PrimarniKljuc)?.Naziv
                            ?? nadjena.Kolone.First().Naziv;
 

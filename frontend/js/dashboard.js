@@ -1,6 +1,3 @@
-// Tab "Rezultati modela" — grafikoni iz stvarnih rezultata benchmarka.
-// Ako test nije pokrenut, prikazuje se uputstvo, a ne izmišljeni brojevi.
-
 import { api } from "./api.js";
 import { $, procenat, trajanje, brojFormat, escapeHtml, poruka } from "./ui.js";
 
@@ -89,8 +86,6 @@ function prikaziPobednika(p) {
     <div><b>${trajanje(najbolji.trajanjeMs)}</b>prosečno po upitu</div>
     <div><b>${brojFormat(najbolji.broj)}</b>testiranih upita</div>`;
 
-  // Ako je aplikacija podešena na drugi model nego što je test pokazao,
-  // to je stvarna nesaglasnost i vredi je istaći, a ne prećutati.
   if (p.podesenModel && p.podesenModel !== p.pobednik) {
     const podesen = p.modeli.find((m) => m.modelId === p.podesenModel);
     $("#pobednik-metrike").insertAdjacentHTML("beforeend",
@@ -170,9 +165,6 @@ function grafTezina(p) {
 }
 
 function grafJezik(p) {
-  // Kartica se sklanja ako je meren samo jedan jezik — grafikon poređenja
-  // sa jednim stupcem ništa ne poredi, a prazan drugi stubac bi navodio na
-  // pogrešan zaključak.
   const kartica = $("#graf-jezik").closest(".kartica");
   if (!p.jezici || p.jezici.length < 2) {
     kartica.classList.add("hidden");

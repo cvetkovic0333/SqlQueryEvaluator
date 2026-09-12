@@ -19,9 +19,6 @@
     <UserSecretsId>7bb75a0f-fb57-4386-880a-33894dfe8cb3</UserSecretsId>
   </PropertyGroup>
 
-  <!-- Registar modela je JEDAN, onaj iz Api projekta. Ranije je Benchmark
-       imao svoju kopiju, pa je izmena granice tokena stigla u aplikaciju,
-       a merenje je i dalje radilo sa starom vrednošću. -->
   <ItemGroup>
     <Content Include="..\SqlQueryEvaluator.Api\appsettings.json" Link="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="appsettings.Development.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('appsettings.Development.json')" />

@@ -4,18 +4,6 @@ using SqlQueryEvaluator.Core.Models;
 
 namespace SqlQueryEvaluator.Core.TextToSql;
 
-/// <summary>
-/// Drugi sloj zaštite pri izvršavanju SQL-a koji je generisao model.
-/// (Prvi sloj je baza — rola sqleval_citanje sme samo SELECT.)
-///
-/// Postupak:
-///   1. skidanje ```sql ograda koje modeli često dodaju uprkos uputstvu
-///   2. uklanjanje komentara, uz maskiranje string literala — da se
-///      ključne reči ne traže unutar podataka ('otkazana' nije DELETE)
-///   3. dozvoljen je tačno JEDAN statement
-///   4. mora da počinje sa SELECT ili WITH
-///   5. odbijanje opasnih ključnih reči i funkcija
-/// </summary>
 public static class SqlSanitizer
 {
     private static readonly string[] ZabranjeneReci =
@@ -38,23 +26,12 @@ public static class SqlSanitizer
     private static readonly Regex Ograda =
         new(@"^\s*```[a-zA-Z]*\s*|\s*```\s*$", RegexOptions.Compiled | RegexOptions.Multiline);
 
-    /// <summary>
-    /// Modeli koji "razmišljaju naglas" (Qwen3, DeepSeek-R1 i slični) ispisuju
-    /// tok razmišljanja u &lt;think&gt; bloku pre samog odgovora. Taj blok se
-    /// uklanja, inače bi upit počinjao tekstom umesto sa SELECT i bio odbijen
-    /// iako je model dao ispravan SQL.
-    /// </summary>
     private static readonly Regex RazmisljanjeZatvoreno =
         new(@"<think>.*?</think>", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
     private static readonly Regex RazmisljanjeNezatvoreno =
         new(@"<think>.*$", RegexOptions.Compiled | RegexOptions.Singleline | RegexOptions.IgnoreCase);
 
-    /// <summary>
-    /// Odgovor presečen na granici tokena odbija se pre ikakve provere. Čak i
-    /// kada odsečeni komad slučajno prolazi (npr. upit presečen pre ORDER BY),
-    /// to nije upit koji je model nameravao da vrati.
-    /// </summary>
     public static SanitizerResult Proveri(string? sirovSql, bool presecen) =>
         presecen
             ? SanitizerResult.Odbijen(
@@ -75,8 +52,6 @@ public static class SqlSanitizer
 
         var sql = Ograda.Replace(bezRazmisljanja, "").Trim();
 
-        // Dollar-quoting ($$...$$) nema šta da traži u SELECT upitu, a jeste
-        // zgodan način da se sakrije sadržaj od provere — odbija se odmah.
         if (sql.Contains("$$") || Regex.IsMatch(sql, @"\$[a-zA-Z_]\w*\$"))
             return SanitizerResult.Odbijen("Upit sadrži dollar-quoted blok, što nije dozvoljeno.");
 
@@ -87,7 +62,6 @@ public static class SqlSanitizer
         if (bezKomentara.Length == 0)
             return SanitizerResult.Odbijen("Posle uklanjanja komentara nije ostao nikakav upit.");
 
-        // Tačno jedan statement: tačka-zarez sme samo na samom kraju.
         var tackaZarez = maskirano.IndexOf(';');
         if (tackaZarez >= 0 && maskirano[(tackaZarez + 1)..].Trim().Length > 0)
             return SanitizerResult.Odbijen("Dozvoljen je samo jedan SQL upit, a primljeno je više njih.");
@@ -113,8 +87,6 @@ public static class SqlSanitizer
                 return SanitizerResult.Odbijen($"Upit sadrži zabranjenu funkciju: {fun}.");
         }
 
-        // Sistemski katalozi ne služe filtriranju podataka, a otkrivaju
-        // strukturu i korisnike baze.
         if (Regex.IsMatch(maskirano, @"\b(pg_catalog|pg_shadow|pg_authid|pg_user|information_schema)\b",
                 RegexOptions.IgnoreCase))
             return SanitizerResult.Odbijen("Pristup sistemskim katalozima nije dozvoljen.");
@@ -122,14 +94,6 @@ public static class SqlSanitizer
         return SanitizerResult.Ok(bezKomentara);
     }
 
-    /// <summary>
-    /// Jedan prolaz kroz tekst koji istovremeno:
-    ///   - izbacuje komentare (-- do kraja reda, /* */ sa ugnežđavanjem),
-    ///   - vraća i verziju u kojoj je sadržaj string literala zamenjen
-    ///     tačkama, da bi provera ključnih reči gledala samo strukturu upita.
-    /// Bez maskiranja bi upit koji legitimno filtrira status = 'otkazana'
-    /// bio odbijen zbog reči koja se nalazi u podacima, a ne u kodu.
-    /// </summary>
     private static (string BezKomentara, string Maskirano) ObradiKomentareIStringove(string sql)
     {
         var cist = new StringBuilder(sql.Length);
@@ -140,7 +104,6 @@ public static class SqlSanitizer
         {
             var c = sql[i];
 
-            // Jednostruki navodnici — string literal.
             if (c == '\'')
             {
                 cist.Append(c);
@@ -169,7 +132,6 @@ public static class SqlSanitizer
                 continue;
             }
 
-            // Dvostruki navodnici — citiran identifikator; ostaje kakav jeste.
             if (c == '"')
             {
                 cist.Append(c);
@@ -185,7 +147,6 @@ public static class SqlSanitizer
                 continue;
             }
 
-            // Linijski komentar.
             if (c == '-' && i + 1 < sql.Length && sql[i + 1] == '-')
             {
                 while (i < sql.Length && sql[i] != '\n') i++;
@@ -194,7 +155,6 @@ public static class SqlSanitizer
                 continue;
             }
 
-            // Blok komentar, sa ugnežđavanjem kao u PostgreSQL-u.
             if (c == '/' && i + 1 < sql.Length && sql[i + 1] == '*')
             {
                 var dubina = 1;
