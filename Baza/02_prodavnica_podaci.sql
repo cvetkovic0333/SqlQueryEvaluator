@@ -1,17 +1,3 @@
--- =====================================================================
--- 02_prodavnica_podaci.sql — popunjavanje šeme "prodavnica"
---
--- Podaci su 100% DETERMINISTIČKI (modularna aritmetika nad rednim brojem
--- reda, bez random()). To je bitno: rezultati benchmarka moraju da budu
--- ponovljivi, jer se generisani SQL poredi sa gold SQL-om po rezultatu.
---
--- Broj redova po tabeli:
---   kategorije 10 | dobavljaci 100 | zaposleni 100 | proizvodi 1000
---   kupci 1500 | porudzbine 2000 | stavke_porudzbine 5000
---   isporuke 1500 | recenzije 2000
---
--- Pokretanje: psql -U postgres -d sqleval -f Baza/02_prodavnica_podaci.sql
--- =====================================================================
 \set ON_ERROR_STOP on
 
 TRUNCATE prodavnica.recenzije, prodavnica.isporuke, prodavnica.stavke_porudzbine,
@@ -19,7 +5,6 @@ TRUNCATE prodavnica.recenzije, prodavnica.isporuke, prodavnica.stavke_porudzbine
          prodavnica.zaposleni, prodavnica.dobavljaci, prodavnica.kategorije
          RESTART IDENTITY CASCADE;
 
--- ------------------------------------------------------ kategorije (10)
 INSERT INTO prodavnica.kategorije (kategorija_id, naziv, opis) VALUES
  (1,  'Laptopovi',              'Prenosivi računari svih klasa'),
  (2,  'Mobilni telefoni',       'Pametni telefoni i dodatna oprema'),
@@ -32,7 +17,6 @@ INSERT INTO prodavnica.kategorije (kategorija_id, naziv, opis) VALUES
  (9,  'Kućni aparati',          'Mali kućni aparati'),
  (10, 'Sportska oprema',        'Bicikli, trenažeri i fitnes oprema');
 
--- ------------------------------------------------------ dobavljaci (100)
 INSERT INTO prodavnica.dobavljaci (dobavljac_id, naziv, grad, drzava, email, telefon, ocena)
 SELECT
     i,
@@ -50,9 +34,6 @@ SELECT
     round((3.0 + ((i * 7) % 21) / 10.0)::numeric, 2)
 FROM generate_series(1, 100) AS i;
 
--- ------------------------------------------------------- zaposleni (100)
--- Hijerarhija: 1 = direktor (menadzer_id NULL), 2..6 = rukovodioci sektora,
--- 7..100 = izvršioci raspoređeni po sektorima. Omogućava self-join zadatke.
 WITH osnova AS (
     SELECT
         i,
@@ -100,10 +81,6 @@ SELECT
     END
 FROM osnova o;
 
--- ------------------------------------------------------- proizvodi (1000)
--- Cena polazi od realne bazne cene kategorije i množi se rasipnim faktorom
--- 0.55–1.70. "rasipanje" je permutacija skupa 0..999 (7919 je prost i
--- uzajamno prost sa 1000), pa su vrednosti raspršene, a ipak determinističke.
 WITH osnova AS (
     SELECT
         i,
@@ -138,7 +115,6 @@ SELECT
     DATE '2021-01-01' + ((o.i * 11) % 1200)
 FROM osnova o;
 
--- ----------------------------------------------------------- kupci (1500)
 WITH osnova AS (
     SELECT
         i,
@@ -178,13 +154,6 @@ SELECT
     (o.i % 23 <> 0)
 FROM osnova o;
 
--- ------------------------------------------------------ porudzbine (2000)
--- Porudžbine 1..1500 su otpremljene (imaju red u tabeli isporuke),
--- 1501..2000 su nove / plaćene / otkazane (bez isporuke).
---
--- Kupci nisu ravnomerno raspoređeni: svaka peta porudžbina ide u grupu od
--- prvih 150 kupaca, čime se dobija realan "rep" čestih kupaca. Bez toga
--- upiti tipa "10 kupaca sa najvećom potrošnjom" nemaju šta da pokažu.
 INSERT INTO prodavnica.porudzbine (porudzbina_id, kupac_id, zaposleni_id,
                                    datum_porudzbine, status, nacin_placanja,
                                    popust_procenat)
@@ -215,18 +184,6 @@ SELECT
     END
 FROM generate_series(1, 2000) AS i;
 
--- ----------------------------------------------- stavke_porudzbine (5000)
--- Svaka porudžbina dobija 2-3 stavke. proizvod_id se računa tako da se
--- unutar iste porudžbine nikada ne ponovi (poštuje UNIQUE ograničenje).
--- Svaka treća porudžbina bira iz "popularnih" proizvoda, da bi rangiranje
--- najprodavanijih imalo smisla.
---
--- Moduli su PROSTI brojevi (199 i 937), a ne okrugli. Sa modulom 1000
--- kategorija proizvoda ((proizvod_id - 1) % 10) postaje prosta funkcija
--- broja porudžbine, pa svaki kupac kupuje iz svega par kategorija i upiti
--- tipa "kupci koji kupuju iz više kategorija" nemaju šta da vrate.
--- Uz modul 937 proizvodi 938-1000 se nikada ne naruče, što je realno i
--- daje smisla upitu "koji proizvodi nikada nisu naručeni".
 WITH generisano AS (
     SELECT
         i,
@@ -258,7 +215,6 @@ SELECT
 FROM mapirano m
 JOIN prodavnica.proizvodi p ON p.proizvod_id = m.proizvod_id;
 
--- -------------------------------------------------------- isporuke (1500)
 INSERT INTO prodavnica.isporuke (isporuka_id, porudzbina_id, kurirska_sluzba,
                                  datum_slanja, datum_isporuke, trosak_dostave,
                                  broj_posiljke)
@@ -276,11 +232,6 @@ SELECT
 FROM prodavnica.porudzbine p
 WHERE p.porudzbina_id <= 1500;
 
--- ------------------------------------------------------- recenzije (2000)
--- Recenzije nisu ravnomerne: 60% ide na sto najrecenziranijih proizvoda,
--- ostatak se razliva, a deo proizvoda ostaje bez ijedne recenzije. Sa
--- ravnomernom raspodelom svaki proizvod dobije tačno dve recenzije, pa
--- upit "proizvodi sa najmanje tri recenzije" nema šta da vrati.
 INSERT INTO prodavnica.recenzije (recenzija_id, proizvod_id, kupac_id, ocena,
                                   komentar, datum)
 SELECT
@@ -310,7 +261,6 @@ SELECT
     DATE '2023-02-01' + ((i * 7) % 850)
 FROM generate_series(1, 2000) AS i;
 
--- ------------------------------- sinhronizacija IDENTITY sekvenci
 SELECT setval(pg_get_serial_sequence('prodavnica.kategorije',        'kategorija_id'), (SELECT max(kategorija_id) FROM prodavnica.kategorije));
 SELECT setval(pg_get_serial_sequence('prodavnica.dobavljaci',        'dobavljac_id'),  (SELECT max(dobavljac_id)  FROM prodavnica.dobavljaci));
 SELECT setval(pg_get_serial_sequence('prodavnica.zaposleni',         'zaposleni_id'),  (SELECT max(zaposleni_id)  FROM prodavnica.zaposleni));

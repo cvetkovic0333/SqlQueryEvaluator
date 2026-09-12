@@ -1,5 +1,3 @@
-// Zajednički pomoćnici: tabovi, poruke, formatiranje, crtanje tabela.
-
 export const $ = (izbor) => document.querySelector(izbor);
 export const $$ = (izbor) => Array.from(document.querySelectorAll(izbor));
 
@@ -60,19 +58,12 @@ export function datumFormat(iso) {
   });
 }
 
-/**
- * Crta tabelu iz {kolone: [], redovi: [[]]}.
- * Brojevi se poravnavaju desno, NULL se vidno razlikuje od praznog teksta —
- * to je bitno kad se proverava rezultat upita.
- */
 export function nacrtajTabelu(element, kolone, redovi) {
   if (!kolone || kolone.length === 0) {
     element.innerHTML = `<tbody><tr><td class="null">Upit nije vratio nijednu kolonu.</td></tr></tbody>`;
     return;
   }
 
-  // Kolona se smatra brojčanom ako su joj sve popunjene vrednosti brojevi.
-  // Tada i zaglavlje ide desno, da naslov stoji tačno iznad svojih brojeva.
   const brojcana = kolone.map((_, i) => {
     const vrednosti = redovi.map((r) => r[i]).filter((v) => v !== null && v !== undefined);
     return vrednosti.length > 0 && vrednosti.every((v) => typeof v === "number");

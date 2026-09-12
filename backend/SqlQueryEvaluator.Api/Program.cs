@@ -3,23 +3,16 @@ using Microsoft.Extensions.FileProviders;
 using SqlQueryEvaluator.Api.Endpoints;
 using SqlQueryEvaluator.Core;
 
-// QuestPDF Community licenca — besplatna za pojedince i male organizacije.
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Tajne se traže IZRIČITO, iako ih ASP.NET u Development režimu obično doda
-// sam. To automatsko dodavanje zavisi od atributa koji SDK generiše pri
-// build-u, pa ume da izostane — aplikacija se tada podigne bez lozinke za
-// bazu i pukne tek na prvom upitu, sa porukom koja ne kaže pravi uzrok.
 builder.Configuration
     .AddUserSecrets<Program>(optional: true)
     .AddEnvironmentVariables();
 
 builder.Services.DodajSqlQueryEvaluator(builder.Configuration);
 
-// Ako lozinka nedostaje, bolje je pući odmah i jasno nego na prvom kliku
-// korisnika uz stotinu linija Npgsql stack trace-a.
 ProveriKonfiguraciju(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(o =>
@@ -30,9 +23,6 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 
 var app = builder.Build();
 
-// Frontend živi u zasebnom folderu /frontend, van backend projekta.
-// Servira se i dalje iz istog procesa — jedan `dotnet run` diže i API i
-// korisnički interfejs, bez drugog servera i bez CORS-a.
 var frontend = NadjiFrontend(builder.Environment.ContentRootPath);
 var fajlovi = new PhysicalFileProvider(frontend);
 
@@ -41,9 +31,6 @@ app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = fajlovi,
 
-    // U razvoju se JS i CSS menjaju stalno, a browser ih kešira i servira
-    // staru verziju — izmena izgleda kao da nije primenjena dok se ne uradi
-    // Ctrl+F5. Zato se u Development režimu keširanje isključuje.
     OnPrepareResponse = kontekst =>
     {
         if (kontekst.Context.RequestServices
@@ -54,8 +41,6 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-// Frontend (wwwroot) se servira iz istog procesa kao i API — nema CORS-a
-// ni drugog dev servera; jedan `dotnet run` diže i UI i API.
 app.MapModelEndpoints();
 app.MapSemaEndpoints();
 app.MapUpitEndpoints();
@@ -101,10 +86,6 @@ static void ProveriKonfiguraciju(IConfiguration konfiguracija)
     Environment.Exit(1);
 }
 
-/// <summary>
-/// Traži folder /frontend polazeći od projekta naviše. Radi i kada se
-/// aplikacija pokrene iz korena projekta i kada se pokrene iz bin foldera.
-/// </summary>
 static string NadjiFrontend(string pocetak)
 {
     var direktorijum = new DirectoryInfo(pocetak);

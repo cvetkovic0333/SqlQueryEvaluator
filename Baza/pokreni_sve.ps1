@@ -1,13 +1,3 @@
-# =====================================================================
-# pokreni_sve.ps1 — kreira bazu sqleval i pusti sve skripte redom.
-#
-# Pokretanje iz korena projekta:
-#   powershell -File Baza/pokreni_sve.ps1
-#
-# Lozinka se NE upisuje u ovaj fajl. Skripta je pročita iz promenljive
-# okruzenja PGPASSWORD, a ako je nema, pita te za nju.
-# =====================================================================
-
 param(
     [string]$PsqlPath = "C:\Program Files\PostgreSQL\18\bin\psql.exe",
     [string]$Korisnik = "postgres",

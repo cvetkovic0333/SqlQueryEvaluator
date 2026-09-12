@@ -33,8 +33,6 @@ public class ExecutionAccuracyTests
     [Fact]
     public void Imena_kolona_se_ignorisu()
     {
-        // Model sme da nazove kolonu kako hoće — pitanje je da li je
-        // rezultat tačan, a ne kako je nazvao izlaz.
         var gold = Rezultat(["ukupno"], [42]);
         var gen = Rezultat(["sum"], [42]);
 
@@ -64,7 +62,6 @@ public class ExecutionAccuracyTests
     [Fact]
     public void Duplikati_se_racunaju_kao_multiskup()
     {
-        // Isti broj redova i isti skup vrednosti, ali različit broj pojavljivanja.
         var gold = Rezultat(["a"], [1], [1], [2]);
         var gen = Rezultat(["a"], [1], [2], [2]);
 
@@ -92,8 +89,6 @@ public class ExecutionAccuracyTests
     [Fact]
     public void Vrednosti_iz_susednih_kolona_ne_mogu_da_se_preliju()
     {
-        // Bez razdvajača koji se ne pojavljuje u podacima, redovi ["ab", "c"]
-        // i ["a", "bc"] bi se spojili u isti tekst i lažno poklopili.
         var gold = Rezultat(["x", "y"], ["ab", "c"]);
         var gen = Rezultat(["x", "y"], ["a", "bc"]);
 
@@ -132,8 +127,6 @@ public class MetricsCalculatorTests
     [Fact]
     public void Kappa_je_nula_kada_sudija_uvek_kaze_tacno()
     {
-        // Sudija koji sve hvali ima visok procenat slaganja ako je većina
-        // upita tačna, ali nula stvarne vrednosti. Kappa to razotkriva.
         var redovi = new[]
         {
             R(true, true), R(true, true), R(true, true), R(false, true)
@@ -149,10 +142,10 @@ public class MetricsCalculatorTests
     {
         var redovi = new[]
         {
-            R(true, true),    // pogodio
-            R(false, true),   // lažno pozitivan — pohvalio netačan upit
-            R(true, false),   // lažno negativan — odbacio tačan upit
-            R(false, false)   // pogodio
+            R(true, true),
+            R(false, true),
+            R(true, false),
+            R(false, false)
         };
 
         var s = MetricsCalculator.IzracunajSlaganje(redovi);
@@ -195,7 +188,6 @@ public class LlmJudgeTests
     [Fact]
     public void Izvlaci_json_iz_markdown_ograde()
     {
-        // Modeli i pored izričitog uputstva umeju da obmotaju odgovor.
         var o = LlmJudge.Rasclani("```json\n{\"ocena\": 3, \"tacan\": false, \"obrazlozenje\": \"Fali filter.\"}\n```", "m");
         Assert.Equal(3, o.Ocena);
         Assert.False(o.Tacan);
@@ -204,8 +196,6 @@ public class LlmJudgeTests
     [Fact]
     public void Ocena_ispod_cetiri_povlaci_tacan_na_false()
     {
-        // Ako model kaže "tacan: true" a da ocenu 2, veruje se oceni —
-        // ona je konkretnija i poredi se sa execution accuracy.
         var o = LlmJudge.Rasclani("""{"ocena": 2, "tacan": true, "obrazlozenje": "x"}""", "m");
         Assert.False(o.Tacan);
     }
@@ -237,9 +227,6 @@ public class LlmJudgeTests
     [Fact]
     public void Spasava_ocenu_iz_presecenog_json_a()
     {
-        // Sudija koji "razmislja" ume da potrosi budzet tokena i vrati
-        // presecen JSON. Ocena je na pocetku odgovora, pa se izvlaci umesto
-        // da se ceo poziv (i kvota potrosena na njega) baci.
         var o = LlmJudge.Rasclani(
             """{"ocena": 4, "tacan": true, "obrazlozenje": "Upit je logic""", "m");
 

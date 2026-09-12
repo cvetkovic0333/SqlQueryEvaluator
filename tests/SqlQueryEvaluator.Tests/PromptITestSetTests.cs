@@ -54,8 +54,6 @@ public class PromptBuilderTests
     [Fact]
     public void Izbor_tabele_povlaci_i_tabelu_na_koju_pokazuje_strani_kljuc()
     {
-        // Bez tabele "kupci" model nema kako da sastavi JOIN, pa bi zadatak
-        // bio unapred izgubljen iako je korisnik izabrao samo porudžbine.
         var opis = PromptBuilder.OpisSeme(Sema(), ["porudzbine"]);
 
         Assert.Contains("prodavnica.porudzbine", opis);
@@ -82,7 +80,6 @@ public class PromptBuilderTests
     [Fact]
     public void Sistemski_prompt_zabranjuje_izmene_podataka()
     {
-        // Isti sistemski prompt za sve modele je uslov da poređenje bude fer.
         Assert.Contains("SELECT or WITH", PromptBuilder.SistemskiPrompt);
         Assert.Contains("Never emit INSERT", PromptBuilder.SistemskiPrompt);
     }
@@ -129,8 +126,6 @@ public class TestSetTests
     [Fact]
     public async Task Svi_gold_upiti_prolaze_sanitizer()
     {
-        // Gold SQL mora da prođe istu proveru kao i generisani — inače bi
-        // execution accuracy padala na tačnim odgovorima.
         var set = await TestSet.UcitajAsync(PutanjaTestSeta());
         foreach (var z in set.Zadaci)
         {

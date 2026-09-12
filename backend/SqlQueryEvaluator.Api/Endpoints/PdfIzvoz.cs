@@ -14,12 +14,6 @@ public sealed record PdfPodaci(
     string? Obrazlozenje,
     QueryResult Rezultat);
 
-/// <summary>
-/// Sastavlja PDF dokument sa pitanjem, generisanim SQL-om, ocenom sudije i
-/// tabelom rezultata — dakle celim tokom, ne samo podacima. Takav dokument
-/// se može priložiti uz rad kao dokaz šta je model odgovorio i na osnovu
-/// čega je upit pušten na izvršenje.
-/// </summary>
 public static class PdfIzvoz
 {
     private const string Mastilo = "#1c2431";
@@ -149,8 +143,6 @@ public static class PdfIzvoz
                         .BorderBottom(0.5f).BorderColor(Linija)
                         .Padding(4);
 
-                    // NULL se namerno razlikuje od praznog teksta — u
-                    // rezultatu upita to su dve različite stvari.
                     if (vrednost is null)
                         celija.Text("NULL").Italic().FontColor(Prigusen).FontSize(8);
                     else

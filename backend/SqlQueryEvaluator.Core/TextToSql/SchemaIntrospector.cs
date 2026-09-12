@@ -6,14 +6,6 @@ using SqlQueryEvaluator.Core.Persistence;
 
 namespace SqlQueryEvaluator.Core.TextToSql;
 
-/// <summary>
-/// Čita strukturu šeme iz information_schema i pg_description.
-/// Rezultat se kešira jer se šema ne menja u toku rada aplikacije.
-///
-/// Koristi vezu aplikacije, a ne rolu za čitanje — komentari na tabelama i
-/// kolonama su deo prompta koji ide modelu, a rola sqleval_citanje nema
-/// pristup svim sistemskim katalozima.
-/// </summary>
 public sealed class SchemaIntrospector(AplikacijaDataSource izvor, IMemoryCache kes)
 {
     private static readonly TimeSpan TrajanjeKesa = TimeSpan.FromMinutes(30);
@@ -118,11 +110,6 @@ public sealed class SchemaIntrospector(AplikacijaDataSource izvor, IMemoryCache 
         return new DatabaseSchema { Naziv = sema, Opis = opisSeme, Tabele = tabele };
     }
 
-    /// <summary>
-    /// Tačan broj redova po tabeli, u jednom upitu. Na ovim veličinama
-    /// (do 5000 redova) COUNT je trenutan, a procena iz pg_class ume da
-    /// promaši, pa se u interfejsu ne bi poklapala sa prikazanim podacima.
-    /// </summary>
     private static async Task UcitajBrojRedovaAsync(
         NpgsqlConnection veza, string sema, List<TableInfo> tabele)
     {
@@ -139,7 +126,6 @@ public sealed class SchemaIntrospector(AplikacijaDataSource izvor, IMemoryCache 
             t.BrojRedova = brojevi.GetValueOrDefault(t.Naziv);
     }
 
-    /// <summary>information_schema vraća duge nazive tipova; kraći su čitljiviji i modelu i korisniku.</summary>
     private static string SkratiTip(string tip) => tip switch
     {
         "character varying" => "varchar",

@@ -3,11 +3,6 @@ using SqlQueryEvaluator.Core.Models;
 
 namespace SqlQueryEvaluator.Tests;
 
-/// <summary>
-/// Isti broj zapisan sa različitim brojem decimala ili različitim tipom
-/// mora da se poklopi — inače bi tačan upit bio proglašen netačnim samo
-/// zato što nije zaokružio na isti broj mesta kao gold upit.
-/// </summary>
 public class NormalizacijaBrojevaTests
 {
     private static QueryResult Jedna(object? v) => new()
@@ -34,7 +29,6 @@ public class NormalizacijaBrojevaTests
     [Fact]
     public void Decimal_i_double_su_isti_na_cetiri_decimale()
     {
-        // double stiže kada je numeric prevelik za .NET decimal.
         Assert.True(Poklapa(1234.5678m, 1234.56781234));
     }
 

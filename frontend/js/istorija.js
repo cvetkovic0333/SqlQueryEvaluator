@@ -1,5 +1,3 @@
-// Tab "Istorija" — prethodni upiti; klik vraća upit u editor.
-
 import { api } from "./api.js";
 import { $, escapeHtml, datumFormat, trajanje, brojFormat, poruka } from "./ui.js";
 import { ucitajUEditor } from "./upit.js";

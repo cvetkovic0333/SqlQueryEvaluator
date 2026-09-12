@@ -1,9 +1,3 @@
-/* =====================================================================
-   Text-to-SQL Evaluator — stilovi
-   Tamna tema. Boje su definisane kao promenljive na jednom mestu, pa se
-   cela paleta menja izmenom bloka :root.
-   ===================================================================== */
-
 :root {
   --bg:            #0b0e14;
   --bg-2:          #11151f;
@@ -57,7 +51,6 @@ body {
 
 .hidden { display: none !important; }
 
-/* ------------------------------------------------------------ zaglavlje */
 .topbar {
   display: flex;
   align-items: center;
@@ -104,7 +97,6 @@ body {
 .pill-label { color: var(--tekst-3); text-transform: uppercase; font-size: 10.5px; letter-spacing: .6px; }
 .pill-value { color: var(--tekst); font-family: var(--mono); font-size: 12px; }
 
-/* ----------------------------------------------------------------- tabovi */
 .tabs {
   display: flex; gap: 2px;
   padding: 0 30px;
@@ -139,7 +131,6 @@ main { padding: 26px 30px 60px; max-width: 1500px; }
   to   { opacity: 1; transform: none; }
 }
 
-/* --------------------------------------------------------------- kartice */
 .kartica {
   background: var(--povrsina);
   border: 1px solid var(--ivica);
@@ -158,7 +149,6 @@ main { padding: 26px 30px 60px; max-width: 1500px; }
 
 .kartica-siroka { grid-column: 1 / -1; }
 
-/* --------------------------------------------------------------- dugmad */
 .dugme {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 9px 17px;
@@ -188,7 +178,6 @@ main { padding: 26px 30px 60px; max-width: 1500px; }
 
 .dugme-opasno:hover:not(:disabled) { border-color: var(--crvena); color: var(--crvena); }
 
-/* --------------------------------------------------------- polja i unos */
 .polje { display: flex; flex-direction: column; gap: 5px; }
 .polje label { font-size: 11.5px; color: var(--tekst-3); text-transform: uppercase; letter-spacing: .5px; }
 
@@ -222,7 +211,6 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 }
 .alatna-info { color: var(--tekst-3); font-size: 12.5px; margin-left: auto; }
 
-/* ------------------------------------------------------------ dashboard */
 .pobednik {
   background: linear-gradient(135deg, rgba(91,140,255,.16), rgba(167,139,250,.10));
   border: 1px solid rgba(91,140,255,.32);
@@ -269,7 +257,6 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .slaganje-stavka { font-size: 12.5px; color: var(--tekst-2); }
 .slaganje-stavka b { display: block; font-size: 17px; color: var(--tekst); }
 
-/* --------------------------------------------------------------- tabele */
 .tabela-okvir { overflow-x: auto; border: 1px solid var(--ivica); border-radius: var(--radijus-malo); }
 
 .tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
@@ -289,17 +276,12 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .tabela tbody tr:last-child td { border-bottom: 0; }
 .tabela .broj { text-align: right; font-family: var(--mono); font-size: 12.5px; }
 
-/* Zaglavlje brojčane kolone mora da prati poravnanje vrednosti ispod sebe.
-   Sa naslovom levo a brojevima desno oko ne povezuje kolonu sa nazivom. */
 .tabela th.broj { text-align: right; font-family: var(--font); font-size: 13px; }
 .tabela .null { color: var(--tekst-3); font-style: italic; }
 .tabela .istaknut { background: var(--akcenat-slab); }
 
-/* ------------------------------------------------------------ tab: baza */
 .baza-raspored { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
 
-/* Desna kolona drži upit, generisani SQL, rezultat i pregled tabele —
-   sve jedno ispod drugog, da se pitanje kuca uz vidljive tabele levo. */
 .baza-desno { display: flex; flex-direction: column; gap: 0; min-width: 0; }
 .baza-desno > .tabela-detalj { min-width: 0; }
 .baza-desno > .tabela-detalj .kartica { margin-bottom: 18px; }
@@ -350,7 +332,6 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .kolona-znacka.pk { border-color: rgba(240,180,41,.45); background: var(--zuta-slaba); }
 .kolona-znacka.fk { border-color: rgba(45,212,191,.4); }
 
-/* ------------------------------------------------------------ tab: upit */
 .upit-kontrole { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
 .upit-akcije { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
 .upit-status { color: var(--tekst-3); font-size: 13px; }
@@ -394,7 +375,6 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .obrazlozenje.upozorenje { border-left-color: var(--zuta); color: var(--tekst); }
 .obrazlozenje.opasnost { border-left-color: var(--crvena); background: var(--crvena-slaba); color: var(--tekst); }
 
-/* -------------------------------------------------------- tab: istorija */
 .istorija-stavka {
   background: var(--povrsina);
   border: 1px solid var(--ivica);
@@ -425,7 +405,6 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
 .znacka.crvena { background: var(--crvena-slaba); color: var(--crvena); border-color: rgba(242,85,90,.35); }
 .znacka.plava  { background: var(--akcenat-slab); color: var(--akcenat-jak); border-color: rgba(91,140,255,.35); }
 
-/* ----------------------------------------------------------- prazna stanja */
 .prazno {
   text-align: center;
   padding: 70px 30px;
@@ -456,7 +435,6 @@ textarea { width: 100%; resize: vertical; font-family: var(--font); line-height:
   margin: 0;
 }
 
-/* -------------------------------------------------------------- ostalo */
 .vrtenje {
   display: inline-block; width: 14px; height: 14px;
   border: 2px solid rgba(255,255,255,.28);

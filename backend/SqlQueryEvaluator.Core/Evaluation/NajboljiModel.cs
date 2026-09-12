@@ -6,16 +6,6 @@ using SqlQueryEvaluator.Core.Persistence;
 
 namespace SqlQueryEvaluator.Core.Evaluation;
 
-/// <summary>
-/// Određuje koji model aplikacija koristi kada joj se ne kaže izričito.
-///
-/// Vrednost se NE upisuje ručno u konfiguraciju nego se računa iz poslednjeg
-/// merenja: pobednik je model sa najvećom tačnošću, a pri izjednačenju brži.
-/// Ručno upisana vrednost zastari čim stigne novo merenje — ovako izbor uvek
-/// prati podatke.
-///
-/// TextToSql:DefaultModelId ostaje kao rezerva, za slučaj da merenja još nema.
-/// </summary>
 public sealed class NajboljiModel(
     BenchmarkRepository repo,
     ILlmProviderFactory fabrika,
@@ -24,8 +14,6 @@ public sealed class NajboljiModel(
 {
     private const string KljucKesa = "najbolji-model";
 
-    // Kratko keširanje: merenje se menja retko, a poziv bi inače išao u bazu
-    // pri svakom prevođenju.
     private static readonly TimeSpan TrajanjeKesa = TimeSpan.FromMinutes(2);
 
     public async Task<string> OdrediAsync(CancellationToken ct = default)
@@ -52,8 +40,6 @@ public sealed class NajboljiModel(
             var redovi = await repo.RezultatiAsync(pokretanje.PokretanjeId, ct);
             if (redovi.Count == 0) return rezerva;
 
-            // Model bez podešenog ključa ne može da odgovori, pa ma koliko
-            // dobro prošao na merenju ne dolazi u obzir kao podrazumevani.
             var kandidat = MetricsCalculator.PoModelu(redovi)
                 .Where(p => fabrika.ImaKljuc(p.Key))
                 .OrderByDescending(p => p.Value.ExecutionAccuracy)
@@ -65,7 +51,6 @@ public sealed class NajboljiModel(
         }
         catch
         {
-            // Baza nedostupna nije razlog da prevođenje stane.
             return rezerva;
         }
     }

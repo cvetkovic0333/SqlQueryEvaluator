@@ -5,15 +5,6 @@ using SqlQueryEvaluator.Core.Llm.Providers;
 
 namespace SqlQueryEvaluator.Core.Llm;
 
-/// <summary>
-/// Registar modela. Čita listu iz appsettings.json i za svaki traženi model
-/// pravi odgovarajućeg provajdera.
-///
-/// API ključ se traži na dva mesta, tim redom:
-///   1. konfiguracija: "ApiKeys:{ApiKeyRef}"  (dotnet user-secrets)
-///   2. promenljiva okruženja: "{APIKEYREF}_API_KEY"
-/// Ključevi nikada ne stoje u appsettings.json — repo je javan.
-/// </summary>
 public sealed class LlmProviderFactory(
     IOptions<List<ModelDescriptor>> modeli,
     IConfiguration konfiguracija,

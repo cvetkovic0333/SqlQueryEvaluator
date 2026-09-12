@@ -22,7 +22,6 @@ public sealed class BenchmarkRezultatUpis
     public int IzlazniTokeni { get; init; }
 }
 
-/// <summary>Sačuvan odgovor modela, za ponovno poređenje bez novog poziva.</summary>
 public sealed class SacuvanUpit
 {
     public long RezultatId { get; init; }
@@ -66,11 +65,6 @@ public sealed class BenchmarkRepository(AplikacijaDataSource izvor)
             new { pokretanjeId });
     }
 
-    /// <summary>
-    /// Upis je idempotentan po (pokretanje, zadatak, model, jezik) — zato
-    /// --resume može da nastavi prekinuto pokretanje bez ponovnog trošenja
-    /// kvote besplatnog API tiera.
-    /// </summary>
     public async Task UpisiRezultatAsync(BenchmarkRezultatUpis r, CancellationToken ct = default)
     {
         await using var veza = await izvor.Izvor.OpenConnectionAsync(ct);
@@ -113,10 +107,6 @@ public sealed class BenchmarkRepository(AplikacijaDataSource izvor)
         return redovi.ToList();
     }
 
-    /// <summary>
-    /// Menja samo ishod poređenja. Odgovor modela i ocena sudije ostaju
-    /// netaknuti — oni ne zavise od pravila poređenja.
-    /// </summary>
     public async Task AzurirajPoredjenjeAsync(
         long rezultatId, bool sqlIspravan, bool rezultatIsti, string? greska, CancellationToken ct = default)
     {
@@ -189,7 +179,6 @@ public sealed class BenchmarkRepository(AplikacijaDataSource izvor)
         return redovi.ToList();
     }
 
-    /// <summary>Sirovi redovi za izvoz u CSV — u radu idu kao prilog.</summary>
     public async Task<IReadOnlyList<dynamic>> SviRedoviAsync(
         int? pokretanjeId = null, CancellationToken ct = default)
     {

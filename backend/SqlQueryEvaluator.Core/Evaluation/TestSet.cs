@@ -7,22 +7,16 @@ public sealed class TestZadatak
 {
     public string Id { get; set; } = "";
 
-    /// <summary>"lak", "srednji" ili "tezak".</summary>
     public string Tezina { get; set; } = "lak";
 
-    /// <summary>Šema nad kojom se zadatak rešava: "prodavnica" ili "fakultet".</summary>
     public string Baza { get; set; } = "prodavnica";
 
-    /// <summary>Pitanje na srpskom.</summary>
     public string PitanjeSr { get; set; } = "";
 
-    /// <summary>Isto pitanje na engleskom — omogućava poređenje po jeziku.</summary>
     public string PitanjeEn { get; set; } = "";
 
-    /// <summary>Tačan upit, ručno napisan i proveren nad bazom.</summary>
     public string GoldSql { get; set; } = "";
 
-    /// <summary>Oznake SQL konstrukcija koje zadatak testira (join, window, cte...).</summary>
     public List<string> Oznake { get; set; } = [];
 
     public string Pitanje(string jezik) =>

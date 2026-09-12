@@ -27,12 +27,6 @@ public sealed record PodaciMetrika(
     IReadOnlyList<RedMetrike> Modeli,
     SlaganjeSudije Slaganje);
 
-/// <summary>
-/// PDF sa rezultatima merenja — tabela koja ide u pisani deo rada.
-/// Uz brojeve nosi i podatke o samom pokretanju (datum, sudija, broj poziva),
-/// jer bez njih tabela nije proverljiva: ponuda besplatnih modela se menja,
-/// pa merenje ima smisla samo uz datum i tačan naziv modela.
-/// </summary>
 public static class PdfMetrike
 {
     private const string Mastilo = "#1c2431";
@@ -89,7 +83,7 @@ public static class PdfMetrike
         {
             tabela.ColumnsDefinition(def =>
             {
-                def.RelativeColumn(3);                       // model
+                def.RelativeColumn(3);
                 foreach (var _ in Enumerable.Range(0, 8))
                     def.RelativeColumn();
             });

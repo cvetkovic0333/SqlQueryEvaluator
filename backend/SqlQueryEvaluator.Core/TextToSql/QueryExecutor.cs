@@ -9,14 +9,6 @@ using SqlQueryEvaluator.Core.Persistence;
 
 namespace SqlQueryEvaluator.Core.TextToSql;
 
-/// <summary>
-/// Izvršava SQL koji je generisao model — isključivo preko veze koja koristi
-/// rolu sqleval_citanje.
-///
-/// Svaki upit ide u transakciju koja je read-only i koja se UVEK završava
-/// rollback-om. Čak i da su prva dva sloja zaštite zakazala, ništa ne ostaje
-/// upisano u bazi.
-/// </summary>
 public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOptions> opcije)
 {
     private readonly TextToSqlOptions _opcije = opcije.Value;
@@ -40,8 +32,6 @@ public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOption
                 await podesavanje.ExecuteNonQueryAsync(ct);
             }
 
-            // Omotač sprečava da korisnički interfejs primi milion redova.
-            // Traži se jedan red više od granice, da bismo znali da je odsečeno.
             var omotan = $"SELECT * FROM (\n{sql}\n) AS _rezultat LIMIT {maxRedova + 1}";
 
             var kaoTekst = await NumericKoloneAsync(omotan, veza, transakcija, ct);
@@ -90,13 +80,6 @@ public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOption
         }
     }
 
-    /// <summary>
-    /// PostgreSQL numeric može da ima mnogo više cifara od .NET decimal-a —
-    /// npr. proizvod više kolona podeljen sa 100.0 lako dobije 20+ decimala.
-    /// Tada GetValue puca iako je upit potpuno ispravan, pa bi model bio
-    /// kažnjen za ograničenje čitača. Takva vrednost se čita kao double;
-    /// poređenje rezultata ionako zaokružuje na 4 decimale.
-    /// </summary>
     private static async Task<bool[]> NumericKoloneAsync(
         string sql, NpgsqlConnection veza, NpgsqlTransaction transakcija, CancellationToken ct)
     {
@@ -114,11 +97,6 @@ public sealed class QueryExecutor(UpitDataSource izvor, IOptions<TextToSqlOption
         : double.TryParse(tekst, NumberStyles.Float, CultureInfo.InvariantCulture, out var x) && double.IsFinite(x) ? x
         : tekst;
 
-    /// <summary>
-    /// Vrednosti se pripremaju za JSON. Datumi idu kao ISO tekst da bi
-    /// poređenje rezultata u evaluaciji bilo stabilno bez obzira na
-    /// podešavanja lokalizacije.
-    /// </summary>
     private static object? Normalizuj(object vrednost) => vrednost switch
     {
         DateTime d => d.TimeOfDay == TimeSpan.Zero
