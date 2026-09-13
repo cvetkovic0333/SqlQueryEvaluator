@@ -210,3 +210,17 @@ groq:qwen3-8-27b,tezak,sr,True,False,4,True,679
 groq:qwen3-8-27b,srednji,sr,True,False,5,True,489
 groq:qwen3-8-27b,tezak,sr,True,False,5,True,689
 groq:qwen3-8-27b,tezak,sr,True,False,5,True,893
+gemini:3.5-flash,srednji,sr,True,False,5,True,12535
+gemini:3.5-flash,srednji,sr,True,False,3,False,18789
+gemini:3.5-flash,tezak,sr,True,False,4,True,10801
+gemini:3.5-flash,tezak,sr,True,False,5,True,36070
+gemini:3.5-flash,tezak,sr,True,False,5,True,12898
+gemini:3.5-flash,tezak,sr,True,False,4,True,4852
+gemini:3.5-flash,tezak,sr,True,False,4,True,2854
+gemini:3.5-flash,tezak,sr,True,False,5,True,5815
+gemini:3.5-flash,tezak,sr,True,False,4,True,6135
+gemini:3.5-flash,tezak,sr,True,False,4,True,8398
+gemini:3.5-flash,tezak,sr,True,False,4,True,4981
+gemini:3.5-flash,tezak,sr,True,False,3,False,14479
+gemini:3.5-flash,tezak,sr,True,False,4,True,16506
+gemini:3.5-flash,tezak,sr,True,False,4,True,10771
