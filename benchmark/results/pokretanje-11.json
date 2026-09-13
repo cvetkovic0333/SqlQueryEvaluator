@@ -1,6 +1,6 @@
 {
   "pokretanjeId": 11,
-  "datum": "2026-09-12T16:52:05.5833886+02:00",
+  "datum": "2026-09-13T15:08:45.3537044+02:00",
   "poModelu": {
     "groq:gpt-oss-20b": {
       "Kljuc": "groq:gpt-oss-20b",
@@ -13,12 +13,12 @@
     },
     "gemini:3.5-flash": {
       "Kljuc": "gemini:3.5-flash",
-      "Broj": 31,
+      "Broj": 45,
       "ValidSqlRate": 100,
-      "ExecutionAccuracy": 71,
-      "ProsecnaOcenaSudije": 4.71,
-      "ProsecnoTrajanjeMs": 8732,
-      "ProsecnoTokena": 2099
+      "ExecutionAccuracy": 48.9,
+      "ProsecnaOcenaSudije": 4.53,
+      "ProsecnoTrajanjeMs": 9702,
+      "ProsecnoTokena": 2541
     },
     "groq:qwen3-8-27b": {
       "Kljuc": "groq:qwen3-8-27b",
@@ -60,40 +60,40 @@
     },
     "srednji": {
       "Kljuc": "srednji",
-      "Broj": 73,
-      "ValidSqlRate": 79.5,
-      "ExecutionAccuracy": 34.2,
+      "Broj": 75,
+      "ValidSqlRate": 80,
+      "ExecutionAccuracy": 33.3,
       "ProsecnaOcenaSudije": 4.16,
-      "ProsecnoTrajanjeMs": 2542,
-      "ProsecnoTokena": 2153
+      "ProsecnoTrajanjeMs": 2892,
+      "ProsecnoTokena": 2171
     },
     "tezak": {
       "Kljuc": "tezak",
-      "Broj": 63,
-      "ValidSqlRate": 69.8,
-      "ExecutionAccuracy": 15.9,
-      "ProsecnaOcenaSudije": 3.79,
-      "ProsecnoTrajanjeMs": 1833,
-      "ProsecnoTokena": 2182
+      "Broj": 75,
+      "ValidSqlRate": 74.7,
+      "ExecutionAccuracy": 13.3,
+      "ProsecnaOcenaSudije": 3.85,
+      "ProsecnoTrajanjeMs": 3334,
+      "ProsecnoTokena": 2416
     }
   },
   "poJeziku": {
     "sr": {
       "Kljuc": "sr",
-      "Broj": 211,
-      "ValidSqlRate": 83.4,
-      "ExecutionAccuracy": 47.9,
-      "ProsecnaOcenaSudije": 4.29,
-      "ProsecnoTrajanjeMs": 2405,
-      "ProsecnoTokena": 2042
+      "Broj": 225,
+      "ValidSqlRate": 84.4,
+      "ExecutionAccuracy": 44.9,
+      "ProsecnaOcenaSudije": 4.28,
+      "ProsecnoTrajanjeMs": 2992,
+      "ProsecnoTokena": 2134
     }
   },
   "slaganjeSudije": {
-    "Slaganje": 61.2,
-    "Kappa": 0.249,
+    "Slaganje": 58.3,
+    "Kappa": 0.224,
     "TacnoPozitivno": 100,
-    "TacnoNegativno": 28,
-    "LaznoPozitivno": 81,
+    "TacnoNegativno": 30,
+    "LaznoPozitivno": 93,
     "LaznoNegativno": 0
   }
 }
