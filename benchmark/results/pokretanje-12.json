@@ -1,0 +1,90 @@
+{
+  "pokretanjeId": 12,
+  "datum": "2026-10-09T09:06:14.1595246+02:00",
+  "poModelu": {
+    "gemini:3.5-flash": {
+      "Kljuc": "gemini:3.5-flash",
+      "Broj": 45,
+      "ValidSqlRate": 100,
+      "ExecutionAccuracy": 66.7,
+      "ProsecnaOcenaSudije": 4.69,
+      "ProsecnoTrajanjeMs": 7392,
+      "ProsecnoTokena": 2755
+    },
+    "groq:gpt-oss-120b": {
+      "Kljuc": "groq:gpt-oss-120b",
+      "Broj": 45,
+      "ValidSqlRate": 97.8,
+      "ExecutionAccuracy": 66.7,
+      "ProsecnaOcenaSudije": 4.71,
+      "ProsecnoTrajanjeMs": 1241,
+      "ProsecnoTokena": 1847
+    },
+    "groq:gpt-oss-20b": {
+      "Kljuc": "groq:gpt-oss-20b",
+      "Broj": 45,
+      "ValidSqlRate": 95.6,
+      "ExecutionAccuracy": 68.9,
+      "ProsecnaOcenaSudije": 4.58,
+      "ProsecnoTrajanjeMs": 772,
+      "ProsecnoTokena": 1847
+    },
+    "groq:qwen3-8-27b": {
+      "Kljuc": "groq:qwen3-8-27b",
+      "Broj": 45,
+      "ValidSqlRate": 97.8,
+      "ExecutionAccuracy": 60,
+      "ProsecnaOcenaSudije": 4.44,
+      "ProsecnoTrajanjeMs": 468,
+      "ProsecnoTokena": 1651
+    }
+  },
+  "poTezini": {
+    "lak": {
+      "Kljuc": "lak",
+      "Broj": 60,
+      "ValidSqlRate": 100,
+      "ExecutionAccuracy": 100,
+      "ProsecnaOcenaSudije": 4.97,
+      "ProsecnoTrajanjeMs": 2549,
+      "ProsecnoTokena": 1719
+    },
+    "tezak": {
+      "Kljuc": "tezak",
+      "Broj": 60,
+      "ValidSqlRate": 95,
+      "ExecutionAccuracy": 48.3,
+      "ProsecnaOcenaSudije": 4.43,
+      "ProsecnoTrajanjeMs": 2628,
+      "ProsecnoTokena": 2298
+    },
+    "srednji": {
+      "Kljuc": "srednji",
+      "Broj": 60,
+      "ValidSqlRate": 98.3,
+      "ExecutionAccuracy": 48.3,
+      "ProsecnaOcenaSudije": 4.42,
+      "ProsecnoTrajanjeMs": 2227,
+      "ProsecnoTokena": 2059
+    }
+  },
+  "poJeziku": {
+    "sr": {
+      "Kljuc": "sr",
+      "Broj": 180,
+      "ValidSqlRate": 97.8,
+      "ExecutionAccuracy": 65.6,
+      "ProsecnaOcenaSudije": 4.61,
+      "ProsecnoTrajanjeMs": 2468,
+      "ProsecnoTokena": 2025
+    }
+  },
+  "slaganjeSudije": {
+    "Slaganje": 75,
+    "Kappa": 0.331,
+    "TacnoPozitivno": 118,
+    "TacnoNegativno": 17,
+    "LaznoPozitivno": 45,
+    "LaznoNegativno": 0
+  }
+}

@@ -40,14 +40,90 @@ public class ExecutionAccuracyTests
     }
 
     [Fact]
-    public void Razlicit_broj_kolona_je_greska()
+    public void Kolona_vise_se_ne_kaznjava()
     {
-        var gold = Rezultat(["a"], [1]);
-        var gen = Rezultat(["a", "b"], [1, 2]);
+        var gold = Rezultat(["ime", "prezime"], ["Ana", "Ilić"], ["Marko", "Jović"]);
+        var gen = Rezultat(["zaposleni_id", "ime", "prezime"], [7, "Marko", "Jović"], [3, "Ana", "Ilić"]);
 
         var ishod = ExecutionAccuracyEvaluator.Uporedi(gold, gen, false);
-        Assert.False(ishod.Poklapa);
-        Assert.Contains("kolona", ishod.Objasnjenje);
+        Assert.True(ishod.Poklapa, ishod.Objasnjenje);
+        Assert.Contains("više", ishod.Objasnjenje);
+    }
+
+    [Fact]
+    public void Kolona_manje_se_ne_kaznjava()
+    {
+        var gold = Rezultat(["ime", "prezime"], ["Ana", "Ilić"], ["Marko", "Jović"]);
+        var gen = Rezultat(["prezime"], ["Jović"], ["Ilić"]);
+
+        var ishod = ExecutionAccuracyEvaluator.Uporedi(gold, gen, false);
+        Assert.True(ishod.Poklapa, ishod.Objasnjenje);
+        Assert.Contains("manje", ishod.Objasnjenje);
+    }
+
+    [Fact]
+    public void Redosled_kolona_nije_bitan()
+    {
+        var gold = Rezultat(["grad", "broj"], ["Niš", 10], ["Beograd", 20]);
+        var gen = Rezultat(["broj", "grad"], [20, "Beograd"], [10, "Niš"]);
+
+        Assert.True(ExecutionAccuracyEvaluator.Uporedi(gold, gen, false).Poklapa);
+    }
+
+    [Fact]
+    public void Kolona_vise_uz_pogresne_podatke_je_greska()
+    {
+        var gold = Rezultat(["ime"], ["Ana"], ["Marko"]);
+        var gen = Rezultat(["id", "ime"], [1, "Ana"], [2, "Jelena"]);
+
+        Assert.False(ExecutionAccuracyEvaluator.Uporedi(gold, gen, false).Poklapa);
+    }
+
+    [Fact]
+    public void Kolone_moraju_da_se_poklope_u_istim_redovima()
+    {
+        var gold = Rezultat(["ime", "prezime"], ["Ana", "Ilić"], ["Marko", "Jović"]);
+        var gen = Rezultat(["ime", "prezime"], ["Ana", "Jović"], ["Marko", "Ilić"]);
+
+        Assert.False(ExecutionAccuracyEvaluator.Uporedi(gold, gen, false).Poklapa);
+    }
+
+    [Fact]
+    public void Kolona_manje_sa_drugim_redosledom_je_greska_kada_gold_ima_order_by()
+    {
+        var gold = Rezultat(["sluzba", "broj"], ["AKS", 30], ["DExpress", 20]);
+        var gen = Rezultat(["sluzba"], ["DExpress"], ["AKS"]);
+
+        Assert.False(ExecutionAccuracyEvaluator.Uporedi(gold, gen, osetljivNaRedosled: true).Poklapa);
+    }
+
+    [Fact]
+    public void Kolona_manje_sa_istim_redosledom_je_tacna_kada_gold_ima_order_by()
+    {
+        var gold = Rezultat(["sluzba", "broj"], ["AKS", 30], ["DExpress", 20]);
+        var gen = Rezultat(["broj"], [30], [20]);
+
+        Assert.True(ExecutionAccuracyEvaluator.Uporedi(gold, gen, osetljivNaRedosled: true).Poklapa);
+    }
+
+    [Fact]
+    public void Rezultat_bez_kolona_je_greska()
+    {
+        var gold = Rezultat(["a"], [1]);
+        var gen = Rezultat([], []);
+
+        Assert.False(ExecutionAccuracyEvaluator.Uporedi(gold, gen, false).Poklapa);
+    }
+
+    [Fact]
+    public void Mnogo_istih_kolona_ne_usporava_poredjenje()
+    {
+        var kolone = Enumerable.Range(0, 12).Select(i => $"k{i}").ToArray();
+        var red = Enumerable.Repeat<object?>(null, 12).ToArray();
+        var gold = Rezultat(kolone, red, red);
+        var gen = Rezultat(kolone, red, red);
+
+        Assert.True(ExecutionAccuracyEvaluator.Uporedi(gold, gen, false).Poklapa);
     }
 
     [Fact]
