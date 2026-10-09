@@ -231,9 +231,9 @@
       "id": "P-S05",
       "tezina": "srednji",
       "baza": "prodavnica",
-      "pitanjeSr": "Koje kurirske službe su isporučile najviše pošiljki? Broji samo isporučene.",
-      "pitanjeEn": "Which couriers delivered the most shipments? Count only delivered ones.",
-      "goldSql": "SELECT kurirska_sluzba, count(*) AS broj FROM prodavnica.isporuke WHERE datum_isporuke IS NOT NULL GROUP BY kurirska_sluzba ORDER BY broj DESC",
+      "pitanjeSr": "Koliko je isporučenih pošiljki imala svaka kurirska služba (računaj i one koje su kasnije vraćene)? Poređaj ih od najviše ka najmanje, a službe sa istim brojem po nazivu.",
+      "pitanjeEn": "How many delivered shipments did each courier have (including those returned later)? Sort them from most to fewest, and couriers with the same count by name.",
+      "goldSql": "SELECT kurirska_sluzba, count(*) AS broj FROM prodavnica.isporuke WHERE datum_isporuke IS NOT NULL GROUP BY kurirska_sluzba ORDER BY broj DESC, kurirska_sluzba",
       "oznake": [
         "group-by",
         "is-null",
@@ -257,7 +257,7 @@
       "baza": "prodavnica",
       "pitanjeSr": "Koliko različitih proizvoda je naručeno iz svake kategorije?",
       "pitanjeEn": "How many distinct products were ordered from each category?",
-      "goldSql": "SELECT k.naziv, count(DISTINCT s.proizvod_id) AS broj FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id GROUP BY k.naziv",
+      "goldSql": "SELECT k.naziv, count(DISTINCT s.proizvod_id) AS broj FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id GROUP BY k.kategorija_id, k.naziv",
       "oznake": [
         "join",
         "distinct",
@@ -307,8 +307,8 @@
       "id": "F-S03",
       "tezina": "srednji",
       "baza": "fakultet",
-      "pitanjeSr": "Prikaži predmete čija je prolaznost ispod 50 procenata.",
-      "pitanjeEn": "Show the courses whose pass rate is below 50 percent.",
+      "pitanjeSr": "Za predmete kod kojih je položeno manje od 50% prijavljenih ispita prikaži naziv predmeta i prolaznost u procentima, zaokruženu na jednu decimalu.",
+      "pitanjeEn": "For courses where less than 50% of registered exams were passed, show the course name and the pass rate in percent, rounded to one decimal place.",
       "goldSql": "SELECT p.naziv, round(100.0 * count(*) FILTER (WHERE pi.polozen) / count(*), 1) AS prolaznost FROM fakultet.predmeti p JOIN fakultet.upisi_predmeta u ON u.predmet_id = p.predmet_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id GROUP BY p.predmet_id, p.naziv HAVING 100.0 * count(*) FILTER (WHERE pi.polozen) / count(*) < 50",
       "oznake": [
         "join",
@@ -546,8 +546,8 @@
       "id": "F-T07",
       "tezina": "tezak",
       "baza": "fakultet",
-      "pitanjeSr": "Koji studenti su položili sve predmete koje su upisali?",
-      "pitanjeEn": "Which students passed every course they enrolled in?",
+      "pitanjeSr": "Koji studenti su položili svaki ispit koji su prijavili, odnosno nemaju nijednu nepoloženu prijavu ispita?",
+      "pitanjeEn": "Which students passed every exam they registered for, i.e. have no unpassed exam registration?",
       "goldSql": "SELECT st.broj_indeksa, st.ime, st.prezime FROM fakultet.studenti st JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id GROUP BY st.student_id, st.broj_indeksa, st.ime, st.prezime HAVING count(*) = count(*) FILTER (WHERE pi.polozen)",
       "oznake": [
         "join",

@@ -31,52 +31,131 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
         return Uporedi(gold, generisano, osetljivNaRedosled);
     }
 
+    private const int MaxPokusajaUparivanja = 100_000;
+
     internal static IshodPoredjenja Uporedi(QueryResult gold, QueryResult generisano, bool osetljivNaRedosled)
     {
-        if (gold.Kolone.Count != generisano.Kolone.Count)
-            return new IshodPoredjenja(false,
-                $"Različit broj kolona: očekivano {gold.Kolone.Count}, dobijeno {generisano.Kolone.Count}.",
-                gold.BrojRedova, generisano.BrojRedova);
+        IshodPoredjenja Ishod(bool poklapa, string objasnjenje) =>
+            new(poklapa, objasnjenje, gold.BrojRedova, generisano.BrojRedova);
+
+        if (generisano.Kolone.Count == 0)
+            return Ishod(false, "Generisani upit nije vratio nijednu kolonu.");
 
         if (gold.BrojRedova != generisano.BrojRedova)
-            return new IshodPoredjenja(false,
-                $"Različit broj redova: očekivano {gold.BrojRedova}, dobijeno {generisano.BrojRedova}.",
-                gold.BrojRedova, generisano.BrojRedova);
+            return Ishod(false,
+                $"Različit broj redova: očekivano {gold.BrojRedova}, dobijeno {generisano.BrojRedova}.");
 
-        var redoviGold = gold.Redovi.Select(NormalizujRed).ToList();
-        var redoviGen = generisano.Redovi.Select(NormalizujRed).ToList();
+        var kolonePoGold = Kolone(gold);
+        var kolonePoGen = Kolone(generisano);
 
-        if (osetljivNaRedosled)
+        var goldJeUzi = kolonePoGold.Count <= kolonePoGen.Count;
+        var uzi = goldJeUzi ? kolonePoGold : kolonePoGen;
+        var siri = goldJeUzi ? kolonePoGen : kolonePoGold;
+        var imenaUzih = goldJeUzi ? gold.Kolone : generisano.Kolone;
+
+        var kandidati = new List<List<int>>(uzi.Count);
+        for (var i = 0; i < uzi.Count; i++)
         {
-            for (var i = 0; i < redoviGold.Count; i++)
+            var moguce = Enumerable.Range(0, siri.Count)
+                .Where(j => osetljivNaRedosled
+                    ? uzi[i].SequenceEqual(siri[j])
+                    : IstiMultiskup(uzi[i], siri[j]))
+                .ToList();
+
+            if (moguce.Count == 0)
             {
-                if (redoviGold[i] != redoviGen[i])
-                    return new IshodPoredjenja(false,
-                        $"Red {i + 1} se razlikuje (gold upit ima ORDER BY, pa je redosled bitan).",
-                        gold.BrojRedova, generisano.BrojRedova);
+                var izvor = goldJeUzi ? "gold rezultatu" : "generisanom rezultatu";
+                var drugi = goldJeUzi ? "generisanom" : "gold";
+                return Ishod(false,
+                    $"Podaci se ne poklapaju: za kolonu „{imenaUzih[i]}” u {izvor} " +
+                    $"ne postoji kolona sa istim vrednostima u {drugi} rezultatu.");
             }
 
-            return new IshodPoredjenja(true, "Rezultati su identični, uključujući redosled redova.",
-                gold.BrojRedova, generisano.BrojRedova);
+            kandidati.Add(moguce);
         }
 
-        var brojaciGold = redoviGold.GroupBy(r => r).ToDictionary(g => g.Key, g => g.Count());
-        var brojaciGen = redoviGen.GroupBy(r => r).ToDictionary(g => g.Key, g => g.Count());
+        var redovaUzih = uzi.Count == 0 ? 0 : uzi[0].Count;
+        var uparivanje = new int[uzi.Count];
+        var zauzete = new bool[siri.Count];
+        var pokusaja = 0;
 
-        foreach (var (red, koliko) in brojaciGold)
+        bool Upari(int i)
         {
-            if (!brojaciGen.TryGetValue(red, out var koliko2) || koliko != koliko2)
-                return new IshodPoredjenja(false,
-                    "Skupovi redova se razlikuju iako je broj redova isti.",
-                    gold.BrojRedova, generisano.BrojRedova);
+            if (i == uzi.Count)
+                return osetljivNaRedosled || IsteProjekcije(uzi, siri, uparivanje, redovaUzih);
+
+            var probane = new List<int>();
+            foreach (var j in kandidati[i])
+            {
+                if (zauzete[j] || probane.Any(p => siri[p].SequenceEqual(siri[j])))
+                    continue;
+                if (++pokusaja > MaxPokusajaUparivanja)
+                    return false;
+
+                probane.Add(j);
+                zauzete[j] = true;
+                uparivanje[i] = j;
+                if (Upari(i + 1))
+                    return true;
+                zauzete[j] = false;
+            }
+
+            return false;
         }
 
-        return new IshodPoredjenja(true, "Rezultati se poklapaju (redosled nije bio bitan).",
-            gold.BrojRedova, generisano.BrojRedova);
+        if (!Upari(0))
+            return Ishod(false, osetljivNaRedosled
+                ? "Redovi se razlikuju (gold upit ima ORDER BY, pa je redosled bitan)."
+                : "Skupovi redova se razlikuju iako je broj redova isti.");
+
+        var razlika = generisano.Kolone.Count - gold.Kolone.Count;
+        var napomena = razlika switch
+        {
+            > 0 => $" Generisani upit ima {razlika} kolon{Nastavak(razlika)} više, što se ne kažnjava.",
+            < 0 => $" Generisani upit ima {-razlika} kolon{Nastavak(-razlika)} manje, što se ne kažnjava.",
+            _ => ""
+        };
+
+        return Ishod(true, (osetljivNaRedosled
+            ? "Rezultati se poklapaju, uključujući redosled redova."
+            : "Rezultati se poklapaju (redosled nije bio bitan).") + napomena);
     }
 
-    private static string NormalizujRed(List<object?> red) =>
-        string.Join("␟", red.Select(NormalizujVrednost));
+    private static List<List<string>> Kolone(QueryResult rezultat) =>
+        Enumerable.Range(0, rezultat.Kolone.Count)
+            .Select(k => rezultat.Redovi
+                .Select(red => k < red.Count ? NormalizujVrednost(red[k]) : NormalizujVrednost(null))
+                .ToList())
+            .ToList();
+
+    private static bool IstiMultiskup(List<string> a, List<string> b) =>
+        a.Count == b.Count && a.Order(StringComparer.Ordinal).SequenceEqual(b.Order(StringComparer.Ordinal));
+
+    private static bool IsteProjekcije(
+        List<List<string>> uzi, List<List<string>> siri, int[] uparivanje, int redova)
+    {
+        var brojaci = new Dictionary<string, int>();
+        for (var r = 0; r < redova; r++)
+        {
+            var kljuc = string.Join("␟", uzi.Select(kolona => kolona[r]));
+            brojaci[kljuc] = brojaci.GetValueOrDefault(kljuc) + 1;
+        }
+
+        for (var r = 0; r < redova; r++)
+        {
+            var kljuc = string.Join("␟", uparivanje.Select(j => siri[j][r]));
+            if (!brojaci.TryGetValue(kljuc, out var koliko) || koliko == 0)
+                return false;
+            brojaci[kljuc] = koliko - 1;
+        }
+
+        return true;
+    }
+
+    private static string Nastavak(int broj) =>
+        broj % 10 == 1 && broj % 100 != 11 ? "u"
+        : broj % 10 is >= 2 and <= 4 && broj % 100 is < 12 or > 14 ? "e"
+        : "a";
 
     private const string FormatBroja = "0.####";
 
