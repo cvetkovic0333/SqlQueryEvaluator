@@ -27,6 +27,7 @@ public sealed class SacuvanUpit
     public long RezultatId { get; init; }
     public string ZadatakId { get; init; } = "";
     public string ModelId { get; init; } = "";
+    public string Jezik { get; init; } = "sr";
     public string? GenerisaniSql { get; init; }
     public bool SqlIspravan { get; init; }
     public bool RezultatIsti { get; init; }
@@ -98,7 +99,7 @@ public sealed class BenchmarkRepository(AplikacijaDataSource izvor)
         var redovi = await veza.QueryAsync<SacuvanUpit>(
             """
             SELECT rezultat_id AS RezultatId, zadatak_id AS ZadatakId, model_id AS ModelId,
-                   generisani_sql AS GenerisaniSql, sql_ispravan AS SqlIspravan,
+                   jezik AS Jezik, generisani_sql AS GenerisaniSql, sql_ispravan AS SqlIspravan,
                    rezultat_isti AS RezultatIsti, greska_izvrsavanja AS GreskaIzvrsavanja
               FROM aplikacija.benchmark_rezultat
              WHERE pokretanje_id = @pokretanjeId
@@ -119,6 +120,20 @@ public sealed class BenchmarkRepository(AplikacijaDataSource izvor)
                    greska_izvrsavanja = @greska
              WHERE rezultat_id = @rezultatId
             """, new { rezultatId, sqlIspravan, rezultatIsti, greska });
+    }
+
+    public async Task AzurirajSudijuAsync(
+        long rezultatId, int ocena, bool tacan, string obrazlozenje, CancellationToken ct = default)
+    {
+        await using var veza = await izvor.Izvor.OpenConnectionAsync(ct);
+        await veza.ExecuteAsync(
+            """
+            UPDATE aplikacija.benchmark_rezultat
+               SET ocena_sudije = @ocena,
+                   sudija_tacan = @tacan,
+                   obrazlozenje = @obrazlozenje
+             WHERE rezultat_id = @rezultatId
+            """, new { rezultatId, ocena, tacan, obrazlozenje });
     }
 
     public async Task<HashSet<string>> VecUradjeniAsync(int pokretanjeId, CancellationToken ct = default)

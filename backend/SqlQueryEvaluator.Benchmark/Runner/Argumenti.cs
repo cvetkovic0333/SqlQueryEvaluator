@@ -9,6 +9,8 @@ public sealed class Argumenti
     public int? Limit { get; private set; }
     public int? NastaviPokretanje { get; private set; }
     public int? PonovoUporedi { get; private set; }
+    public int? PonovoOceni { get; private set; }
+    public List<string> Zadaci { get; private set; } = [];
     public bool SamoProvera { get; private set; }
     public int PauzaMs { get; private set; } = 1200;
     public string? ModelSudije { get; private set; }
@@ -50,6 +52,13 @@ public sealed class Argumenti
                 case "--recompare" or "--ponovo-uporedi":
                     a.PonovoUporedi = int.TryParse(Sledeci(), out var pu) ? pu : null;
                     break;
+                case "--rejudge" or "--ponovo-oceni":
+                    a.PonovoOceni = int.TryParse(Sledeci(), out var po) ? po : null;
+                    break;
+                case "--tasks" or "--zadaci":
+                    a.Zadaci = (Sledeci() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries
+                                                          | StringSplitOptions.TrimEntries).ToList();
+                    break;
                 case "--dry-run" or "--provera":
                     a.SamoProvera = true;
                     break;
@@ -82,6 +91,9 @@ public sealed class Argumenti
           --resume    <id>      nastavi prekinuto pokretanje, preskačući već urađeno
           --recompare <id>      ponovo uporedi sačuvane upite sa gold rezultatom, bez
                                 poziva modelima (posle izmene pravila poređenja)
+          --rejudge   <id>      ponovo oceni sačuvane upite sudijom, bez poziva modelima
+                                (posle izmene tačnog upita)
+          --tasks     <lista>   uz --rejudge: samo navedeni zadaci, npr. P-S02
           --delay     <ms>      pauza između poziva (podrazumevano 1200)
           --judge     <model>   model u ulozi sudije (podrazumevano iz appsettings.json)
           --dry-run             samo proveri koji modeli imaju ispravan API ključ

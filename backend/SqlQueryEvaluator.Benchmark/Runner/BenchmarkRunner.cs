@@ -35,6 +35,9 @@ public sealed class BenchmarkRunner(
         if (arg.PonovoUporedi is { } zaPoredjenje)
             return await PonovoUporediAsync(zaPoredjenje, arg.TestSetPutanja, ct);
 
+        if (arg.PonovoOceni is { } zaOcenu)
+            return await PonovoOceniAsync(zaOcenu, arg, ct);
+
         var testSet = await TestSet.UcitajAsync(arg.TestSetPutanja, ct);
         var zadaci = Filtriraj(testSet.Zadaci, arg);
 
@@ -255,6 +258,58 @@ public sealed class BenchmarkRunner(
         return 0;
 
         static string Znak(bool tacno, bool ispravan) => tacno ? "✓" : ispravan ? "≈" : "✗";
+    }
+
+    private async Task<int> PonovoOceniAsync(int pokretanjeId, Argumenti arg, CancellationToken ct)
+    {
+        var modelSudije = arg.ModelSudije ?? _opcije.JudgeModelId;
+        if (string.IsNullOrWhiteSpace(modelSudije) || !fabrika.ImaKljuc(modelSudije))
+        {
+            Console.WriteLine($"Sudija '{modelSudije}' nema API ključ.");
+            return 1;
+        }
+
+        var testSet = await TestSet.UcitajAsync(arg.TestSetPutanja, ct);
+        var zadaci = testSet.Zadaci.ToDictionary(z => z.Id);
+        var upiti = (await repo.SacuvaniUpitiAsync(pokretanjeId, ct))
+            .Where(u => arg.Zadaci.Count == 0 || arg.Zadaci.Contains(u.ZadatakId, StringComparer.OrdinalIgnoreCase))
+            .ToList();
+
+        Console.WriteLine($"Ponovna ocena pokretanja #{pokretanjeId}: {upiti.Count} sačuvanih odgovora (sudija: {modelSudije})");
+        Console.WriteLine();
+
+        int ocenjeno = 0, neuspesno = 0;
+
+        foreach (var u in upiti)
+        {
+            if (string.IsNullOrWhiteSpace(u.GenerisaniSql) || !zadaci.TryGetValue(u.ZadatakId, out var zadatak))
+                continue;
+
+            var sema = await introspektor.UcitajAsync(zadatak.Baza, ct);
+            var ocena = await sudija.OceniAsync(
+                modelSudije, sema, zadatak.Pitanje(u.Jezik), u.GenerisaniSql,
+                zadatak.GoldSql, u.GreskaIzvrsavanja, ct);
+
+            if (ocena.Ocena <= 0)
+            {
+                neuspesno++;
+                Console.WriteLine($"  {u.ModelId,-22} {u.ZadatakId,-6} GREŠKA: {ocena.Obrazlozenje}");
+                continue;
+            }
+
+            await repo.AzurirajSudijuAsync(u.RezultatId, ocena.Ocena, ocena.Tacan, ocena.Obrazlozenje, ct);
+            ocenjeno++;
+            Console.WriteLine($"  {u.ModelId,-22} {u.ZadatakId,-6} sudija={ocena.Ocena}");
+
+            if (arg.PauzaMs > 0)
+                await Task.Delay(arg.PauzaMs, ct);
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"Ocenjeno: {ocenjeno}, neuspešno: {neuspesno}");
+
+        await IzvestajAsync(pokretanjeId, ct);
+        return neuspesno == 0 ? 0 : 1;
     }
 
     private async Task<int> ProveriKljuceveAsync(CancellationToken ct)

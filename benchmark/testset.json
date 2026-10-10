@@ -195,9 +195,9 @@
       "baza": "prodavnica",
       "pitanjeSr": "Koliko porudžbina ima svaki kupac iz Novog Sada?",
       "pitanjeEn": "How many orders does each customer from Novi Sad have?",
-      "goldSql": "SELECT k.ime, k.prezime, count(*) AS broj FROM prodavnica.kupci k JOIN prodavnica.porudzbine p ON p.kupac_id = k.kupac_id WHERE k.grad = 'Novi Sad' GROUP BY k.kupac_id, k.ime, k.prezime",
+      "goldSql": "SELECT k.ime, k.prezime, count(p.porudzbina_id) AS broj FROM prodavnica.kupci k LEFT JOIN prodavnica.porudzbine p ON p.kupac_id = k.kupac_id WHERE k.grad = 'Novi Sad' GROUP BY k.kupac_id, k.ime, k.prezime",
       "oznake": [
-        "join",
+        "left-join",
         "group-by",
         "where"
       ]
