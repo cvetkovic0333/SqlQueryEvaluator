@@ -322,9 +322,9 @@
       "baza": "fakultet",
       "pitanjeSr": "Koliko predmeta predaje svaki profesor?",
       "pitanjeEn": "How many courses does each professor teach?",
-      "goldSql": "SELECT pr.ime, pr.prezime, count(*) AS broj FROM fakultet.profesori pr JOIN fakultet.predmeti p ON p.profesor_id = pr.profesor_id GROUP BY pr.profesor_id, pr.ime, pr.prezime",
+      "goldSql": "SELECT pr.ime, pr.prezime, count(p.predmet_id) AS broj FROM fakultet.profesori pr LEFT JOIN fakultet.predmeti p ON p.profesor_id = pr.profesor_id GROUP BY pr.profesor_id, pr.ime, pr.prezime",
       "oznake": [
-        "join",
+        "left-join",
         "group-by"
       ]
     },
