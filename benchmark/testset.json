@@ -246,9 +246,10 @@
       "baza": "prodavnica",
       "pitanjeSr": "Prikaži ime i prezime svakog zaposlenog zajedno sa imenom i prezimenom njegovog menadžera.",
       "pitanjeEn": "Show each employee's first and last name together with their manager's first and last name.",
-      "goldSql": "SELECT z.ime, z.prezime, m.ime AS ime_menadzera, m.prezime AS prezime_menadzera FROM prodavnica.zaposleni z JOIN prodavnica.zaposleni m ON m.zaposleni_id = z.menadzer_id",
+      "goldSql": "SELECT z.ime, z.prezime, m.ime AS ime_menadzera, m.prezime AS prezime_menadzera FROM prodavnica.zaposleni z LEFT JOIN prodavnica.zaposleni m ON m.zaposleni_id = z.menadzer_id",
       "oznake": [
-        "self-join"
+        "self-join",
+        "left-join"
       ]
     },
     {
@@ -297,9 +298,9 @@
       "baza": "fakultet",
       "pitanjeSr": "Koliko studenata ima svaki smer?",
       "pitanjeEn": "How many students does each study program have?",
-      "goldSql": "SELECT sm.naziv, count(*) AS broj FROM fakultet.studenti st JOIN fakultet.smerovi sm ON sm.smer_id = st.smer_id GROUP BY sm.naziv",
+      "goldSql": "SELECT sm.naziv, count(st.student_id) AS broj FROM fakultet.smerovi sm LEFT JOIN fakultet.studenti st ON st.smer_id = sm.smer_id GROUP BY sm.smer_id, sm.naziv",
       "oznake": [
-        "join",
+        "left-join",
         "group-by"
       ]
     },
