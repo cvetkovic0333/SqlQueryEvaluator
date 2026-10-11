@@ -373,7 +373,7 @@
       "baza": "prodavnica",
       "pitanjeSr": "Za svaku kategoriju prikaži njen najskuplji proizvod.",
       "pitanjeEn": "For each category show its most expensive product.",
-      "goldSql": "WITH rang AS ( SELECT p.naziv, p.cena, k.naziv AS kategorija, ROW_NUMBER() OVER (PARTITION BY p.kategorija_id ORDER BY p.cena DESC, p.proizvod_id) AS r FROM prodavnica.proizvodi p JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id) SELECT kategorija, naziv, cena FROM rang WHERE r = 1",
+      "goldSql": "WITH rang AS ( SELECT p.naziv, p.cena, k.naziv AS kategorija, RANK() OVER (PARTITION BY p.kategorija_id ORDER BY p.cena DESC) AS r FROM prodavnica.proizvodi p JOIN prodavnica.kategorije k ON k.kategorija_id = p.kategorija_id) SELECT kategorija, naziv, cena FROM rang WHERE r = 1",
       "oznake": [
         "cte",
         "window",
@@ -450,7 +450,7 @@
       "baza": "prodavnica",
       "pitanjeSr": "Prikaži tri najprodavanija proizvoda u svakoj kategoriji, po ukupnoj naručenoj količini.",
       "pitanjeEn": "Show the three best-selling products in each category, by total ordered quantity.",
-      "goldSql": "WITH prodaja AS ( SELECT p.proizvod_id, p.naziv, p.kategorija_id, SUM(s.kolicina) AS komada FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id GROUP BY p.proizvod_id, p.naziv, p.kategorija_id), rang AS ( SELECT prodaja.*, ROW_NUMBER() OVER (PARTITION BY kategorija_id ORDER BY komada DESC, proizvod_id) AS r FROM prodaja) SELECT k.naziv AS kategorija, rang.naziv, rang.komada FROM rang JOIN prodavnica.kategorije k ON k.kategorija_id = rang.kategorija_id WHERE rang.r <= 3",
+      "goldSql": "WITH prodaja AS ( SELECT p.proizvod_id, p.naziv, p.kategorija_id, SUM(s.kolicina) AS komada FROM prodavnica.stavke_porudzbine s JOIN prodavnica.proizvodi p ON p.proizvod_id = s.proizvod_id GROUP BY p.proizvod_id, p.naziv, p.kategorija_id), rang AS ( SELECT prodaja.*, RANK() OVER (PARTITION BY kategorija_id ORDER BY komada DESC) AS r FROM prodaja) SELECT k.naziv AS kategorija, rang.naziv, rang.komada FROM rang JOIN prodavnica.kategorije k ON k.kategorija_id = rang.kategorija_id WHERE rang.r <= 3",
       "oznake": [
         "cte",
         "window",
@@ -475,7 +475,7 @@
       "baza": "fakultet",
       "pitanjeSr": "Za svaki smer prikaži studenta sa najboljim prosekom.",
       "pitanjeEn": "For each study program show the student with the best average grade.",
-      "goldSql": "WITH prosek AS ( SELECT st.student_id, st.ime, st.prezime, st.smer_id, avg(pi.ocena) AS p FROM fakultet.studenti st JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE pi.ocena IS NOT NULL GROUP BY st.student_id, st.ime, st.prezime, st.smer_id), rang AS ( SELECT prosek.*, ROW_NUMBER() OVER (PARTITION BY smer_id ORDER BY p DESC, student_id) AS r FROM prosek) SELECT s.naziv AS smer, rang.ime, rang.prezime, round(rang.p, 2) AS prosek FROM rang JOIN fakultet.smerovi s ON s.smer_id = rang.smer_id WHERE rang.r = 1",
+      "goldSql": "WITH prosek AS ( SELECT st.student_id, st.ime, st.prezime, st.smer_id, avg(pi.ocena) AS p FROM fakultet.studenti st JOIN fakultet.upisi_predmeta u ON u.student_id = st.student_id JOIN fakultet.prijave_ispita pi ON pi.upis_id = u.upis_id WHERE pi.ocena IS NOT NULL GROUP BY st.student_id, st.ime, st.prezime, st.smer_id), rang AS ( SELECT prosek.*, RANK() OVER (PARTITION BY smer_id ORDER BY p DESC) AS r FROM prosek) SELECT s.naziv AS smer, rang.ime, rang.prezime, round(rang.p, 2) AS prosek FROM rang JOIN fakultet.smerovi s ON s.smer_id = rang.smer_id WHERE rang.r = 1",
       "oznake": [
         "cte",
         "window",

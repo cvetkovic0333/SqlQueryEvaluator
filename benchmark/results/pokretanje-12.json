@@ -1,13 +1,13 @@
 {
   "pokretanjeId": 12,
-  "datum": "2026-10-11T20:52:17.4965466+02:00",
+  "datum": "2026-10-11T22:28:53.4579674+02:00",
   "poModelu": {
     "gemini:3.5-flash": {
       "Kljuc": "gemini:3.5-flash",
       "Broj": 45,
       "ValidSqlRate": 100,
       "ExecutionAccuracy": 73.3,
-      "ProsecnaOcenaSudije": 4.84,
+      "ProsecnaOcenaSudije": 4.73,
       "ProsecnoTrajanjeMs": 7392,
       "ProsecnoTokena": 2755
     },
@@ -16,7 +16,7 @@
       "Broj": 45,
       "ValidSqlRate": 97.8,
       "ExecutionAccuracy": 73.3,
-      "ProsecnaOcenaSudije": 4.73,
+      "ProsecnaOcenaSudije": 4.6,
       "ProsecnoTrajanjeMs": 1241,
       "ProsecnoTokena": 1847
     },
@@ -25,7 +25,7 @@
       "Broj": 45,
       "ValidSqlRate": 95.6,
       "ExecutionAccuracy": 73.3,
-      "ProsecnaOcenaSudije": 4.62,
+      "ProsecnaOcenaSudije": 4.56,
       "ProsecnoTrajanjeMs": 772,
       "ProsecnoTokena": 1847
     },
@@ -33,8 +33,8 @@
       "Kljuc": "groq:qwen3-8-27b",
       "Broj": 45,
       "ValidSqlRate": 97.8,
-      "ExecutionAccuracy": 68.9,
-      "ProsecnaOcenaSudije": 4.6,
+      "ExecutionAccuracy": 71.1,
+      "ProsecnaOcenaSudije": 4.64,
       "ProsecnoTrajanjeMs": 468,
       "ProsecnoTokena": 1651
     }
@@ -62,8 +62,8 @@
       "Kljuc": "tezak",
       "Broj": 60,
       "ValidSqlRate": 95,
-      "ExecutionAccuracy": 48.3,
-      "ProsecnaOcenaSudije": 4.43,
+      "ExecutionAccuracy": 50,
+      "ProsecnaOcenaSudije": 4.23,
       "ProsecnoTrajanjeMs": 2628,
       "ProsecnoTokena": 2298
     }
@@ -73,18 +73,18 @@
       "Kljuc": "sr",
       "Broj": 180,
       "ValidSqlRate": 97.8,
-      "ExecutionAccuracy": 72.2,
-      "ProsecnaOcenaSudije": 4.7,
+      "ExecutionAccuracy": 72.8,
+      "ProsecnaOcenaSudije": 4.63,
       "ProsecnoTrajanjeMs": 2468,
       "ProsecnoTokena": 2025
     }
   },
   "slaganjeSudije": {
-    "Slaganje": 78.9,
-    "Kappa": 0.313,
-    "TacnoPozitivno": 130,
-    "TacnoNegativno": 12,
-    "LaznoPozitivno": 38,
+    "Slaganje": 81.7,
+    "Kappa": 0.414,
+    "TacnoPozitivno": 131,
+    "TacnoNegativno": 16,
+    "LaznoPozitivno": 33,
     "LaznoNegativno": 0
   }
 }
