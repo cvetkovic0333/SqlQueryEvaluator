@@ -67,17 +67,20 @@ public static class BenchmarkEndpoints
                 podesenModel = await najbolji.OdrediAsync(ct),
                 ukupnoPoziva = redovi.Count,
 
-                modeli = poModelu.OrderByDescending(p => p.Value.ExecutionAccuracy).Select(p => new
-                {
-                    modelId = p.Key,
-                    naziv = Naziv(p.Key),
-                    broj = p.Value.Broj,
-                    validSql = p.Value.ValidSqlRate,
-                    tacnost = p.Value.ExecutionAccuracy,
-                    ocenaSudije = p.Value.ProsecnaOcenaSudije,
-                    trajanjeMs = p.Value.ProsecnoTrajanjeMs,
-                    tokeni = p.Value.ProsecnoTokena
-                }),
+                modeli = poModelu
+                    .OrderByDescending(p => p.Value.ExecutionAccuracy)
+                    .ThenBy(p => p.Value.ProsecnoTrajanjeMs)
+                    .Select(p => new
+                    {
+                        modelId = p.Key,
+                        naziv = Naziv(p.Key),
+                        broj = p.Value.Broj,
+                        validSql = p.Value.ValidSqlRate,
+                        tacnost = p.Value.ExecutionAccuracy,
+                        ocenaSudije = p.Value.ProsecnaOcenaSudije,
+                        trajanjeMs = p.Value.ProsecnoTrajanjeMs,
+                        tokeni = p.Value.ProsecnoTokena
+                    }),
 
                 poTezini = poModelu.Keys.OrderBy(k => k).Select(model => new
                 {

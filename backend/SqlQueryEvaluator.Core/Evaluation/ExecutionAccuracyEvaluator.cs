@@ -46,9 +46,7 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
                 $"Različit broj redova: očekivano {gold.BrojRedova}, dobijeno {generisano.BrojRedova}.");
 
         var kolonePoGold = Kolone(gold, null);
-        var decimaleGold = Enumerable.Range(0, gold.Kolone.Count)
-            .Select(k => DecimaleKolone(gold, k))
-            .ToArray();
+        var decimaleGold = DecimaleKolona(gold);
         var kolonePoGen = new Dictionary<int, List<List<string>>>();
 
         List<string> Generisana(int kolona, int? decimale)
@@ -72,11 +70,9 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
         for (var i = 0; i < brojUzih; i++)
         {
             var moguce = Enumerable.Range(0, brojSirih)
-                .Where(j =>
-                {
-                    var (uza, sira) = Par(i, j);
-                    return osetljivNaRedosled ? uza.SequenceEqual(sira) : IstiMultiskup(uza, sira);
-                })
+                .Where(j => osetljivNaRedosled
+                    ? Par(i, j).Uza.SequenceEqual(Par(i, j).Sira)
+                    : IstiMultiskup(Par(i, j).Uza, Par(i, j).Sira))
                 .ToList();
 
             if (moguce.Count == 0)
@@ -157,6 +153,9 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
                 .Select(red => NormalizujVrednost(k < red.Count ? red[k] : null, decimale))
                 .ToList())
             .ToList();
+
+    private static int?[] DecimaleKolona(QueryResult rezultat) =>
+        Enumerable.Range(0, rezultat.Kolone.Count).Select(k => DecimaleKolone(rezultat, k)).ToArray();
 
     private static int? DecimaleKolone(QueryResult rezultat, int kolona)
     {
