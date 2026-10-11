@@ -88,6 +88,28 @@ public class NormalizacijaBrojevaTests
         Assert.False(Poklapa(3L, 2.6m));
     }
 
+    private static bool PoklapaUzTrazenoZaokruzivanje(object? gold, object? gen) =>
+        ExecutionAccuracyEvaluator.Uporedi(Jedna(gold), Jedna(gen), osetljivNaRedosled: false, zaokruzivanjeTrazeno: true).Poklapa;
+
+    [Fact]
+    public void Kada_pitanje_trazi_zaokruzivanje_vise_decimala_je_greska()
+    {
+        Assert.False(PoklapaUzTrazenoZaokruzivanje(45.3m, 45.2876m));
+        Assert.False(PoklapaUzTrazenoZaokruzivanje(45.3m, 45.29m));
+    }
+
+    [Fact]
+    public void Kada_pitanje_trazi_zaokruzivanje_manje_decimala_je_greska()
+    {
+        Assert.False(PoklapaUzTrazenoZaokruzivanje(45.3m, 45m));
+    }
+
+    [Fact]
+    public void Kada_pitanje_trazi_zaokruzivanje_ispravno_zaokruzen_broj_je_tacan()
+    {
+        Assert.True(PoklapaUzTrazenoZaokruzivanje(45.3m, 45.30m));
+    }
+
     [Fact]
     public void Zaokruzivanje_vazi_i_kada_model_vrati_kolonu_vise_ili_manje()
     {

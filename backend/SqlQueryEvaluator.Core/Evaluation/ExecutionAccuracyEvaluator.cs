@@ -16,7 +16,7 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
     private const int MaxRedovaZaPoredjenje = 5000;
 
     public async Task<IshodPoredjenja> UporediAsync(
-        string goldSql, string generisaniSql, CancellationToken ct = default)
+        string goldSql, string generisaniSql, bool zaokruzivanjeTrazeno, CancellationToken ct = default)
     {
         var gold = await izvrsilac.IzvrsiAsync(goldSql, MaxRedovaZaPoredjenje, ct);
         if (!gold.Uspesno)
@@ -28,12 +28,13 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
                 gold.BrojRedova, 0);
 
         var osetljivNaRedosled = ImaOrderBy(goldSql);
-        return Uporedi(gold, generisano, osetljivNaRedosled);
+        return Uporedi(gold, generisano, osetljivNaRedosled, zaokruzivanjeTrazeno);
     }
 
     private const int MaxPokusajaUparivanja = 100_000;
 
-    internal static IshodPoredjenja Uporedi(QueryResult gold, QueryResult generisano, bool osetljivNaRedosled)
+    internal static IshodPoredjenja Uporedi(
+        QueryResult gold, QueryResult generisano, bool osetljivNaRedosled, bool zaokruzivanjeTrazeno = false)
     {
         IshodPoredjenja Ishod(bool poklapa, string objasnjenje) =>
             new(poklapa, objasnjenje, gold.BrojRedova, generisano.BrojRedova);
@@ -46,7 +47,7 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
                 $"Različit broj redova: očekivano {gold.BrojRedova}, dobijeno {generisano.BrojRedova}.");
 
         var kolonePoGold = Kolone(gold, null);
-        var decimaleGold = DecimaleKolona(gold);
+        var decimaleGold = DecimaleKolona(gold, zaokruzivanjeTrazeno);
         var kolonePoGen = new Dictionary<int, List<List<string>>>();
 
         List<string> Generisana(int kolona, int? decimale)
@@ -154,8 +155,10 @@ public sealed class ExecutionAccuracyEvaluator(QueryExecutor izvrsilac)
                 .ToList())
             .ToList();
 
-    private static int?[] DecimaleKolona(QueryResult rezultat) =>
-        Enumerable.Range(0, rezultat.Kolone.Count).Select(k => DecimaleKolone(rezultat, k)).ToArray();
+    private static int?[] DecimaleKolona(QueryResult rezultat, bool zaokruzivanjeTrazeno) =>
+        Enumerable.Range(0, rezultat.Kolone.Count)
+            .Select(k => zaokruzivanjeTrazeno ? null : DecimaleKolone(rezultat, k))
+            .ToArray();
 
     private static int? DecimaleKolone(QueryResult rezultat, int kolona)
     {

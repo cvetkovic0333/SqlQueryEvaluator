@@ -124,6 +124,16 @@ public class TestSetTests
     }
 
     [Fact]
+    public async Task Trazeno_zaokruzivanje_je_oznaceno_samo_kada_ga_pitanje_trazi()
+    {
+        var set = await TestSet.UcitajAsync(PutanjaTestSeta());
+        foreach (var z in set.Zadaci)
+            Assert.True(z.PitanjeSr.Contains("zaokruž", StringComparison.OrdinalIgnoreCase) == z.TrazenoZaokruzivanje, z.Id);
+
+        Assert.Equal(["F-S03"], set.Zadaci.Where(z => z.TrazenoZaokruzivanje).Select(z => z.Id));
+    }
+
+    [Fact]
     public async Task Svi_gold_upiti_prolaze_sanitizer()
     {
         var set = await TestSet.UcitajAsync(PutanjaTestSeta());

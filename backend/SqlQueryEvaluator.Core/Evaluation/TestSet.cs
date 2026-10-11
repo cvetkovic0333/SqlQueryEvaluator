@@ -19,6 +19,8 @@ public sealed class TestZadatak
 
     public List<string> Oznake { get; set; } = [];
 
+    public bool TrazenoZaokruzivanje { get; set; }
+
     public string Pitanje(string jezik) =>
         jezik.Equals("en", StringComparison.OrdinalIgnoreCase) ? PitanjeEn : PitanjeSr;
 }

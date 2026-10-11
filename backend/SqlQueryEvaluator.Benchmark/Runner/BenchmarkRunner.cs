@@ -178,7 +178,7 @@ public sealed class BenchmarkRunner(
 
         if (provera.Prihvacen)
         {
-            var ishod = await poredjenje.UporediAsync(zadatak.GoldSql, provera.Sql, ct);
+            var ishod = await poredjenje.UporediAsync(zadatak.GoldSql, provera.Sql, zadatak.TrazenoZaokruzivanje, ct);
             rezultatIsti = ishod.Poklapa;
             sqlIspravan = !ishod.Objasnjenje.StartsWith("Generisani SQL se nije izvršio", StringComparison.Ordinal);
             if (!ishod.Poklapa) greska = ishod.Objasnjenje;
@@ -236,7 +236,7 @@ public sealed class BenchmarkRunner(
                 continue;
             }
 
-            var ishod = await poredjenje.UporediAsync(zadatak.GoldSql, u.GenerisaniSql, ct);
+            var ishod = await poredjenje.UporediAsync(zadatak.GoldSql, u.GenerisaniSql, zadatak.TrazenoZaokruzivanje, ct);
             var sqlIspravan = !ishod.Objasnjenje.StartsWith("Generisani SQL se nije izvršio", StringComparison.Ordinal);
             var greska = ishod.Poklapa ? null : ishod.Objasnjenje;
             provereno++;
